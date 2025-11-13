@@ -1,0 +1,20 @@
+{
+  "name": "scm",
+  "version": "1.0.0",
+  "description": "甘蔗收割机数据采集与监控系统",
+  "private": true,
+  "scripts": {
+    "dev": "pnpm --parallel --filter './apps/*' dev",
+    "build": "pnpm --filter './apps/*' build",
+    "test": "pnpm --filter './apps/*' test",
+    "lint": "pnpm --filter './apps/*' lint",
+    "clean": "pnpm --filter './apps/*' clean && rm -rf node_modules"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.0"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  }
+}
