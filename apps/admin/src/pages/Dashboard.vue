@@ -71,9 +71,13 @@ const deviceStore = useDeviceStore();
 const router = useRouter();
 
 onMounted(() => {
+  // 初始化时加载设备列表，填充仪表盘统计数据
   deviceStore.fetchDevices();
 });
 
+/**
+ * 仪表盘中点击设备卡片后跳转到设备详情页面
+ */
 const handleDeviceSelect = (deviceId: number) => {
   router.push(`/devices/${deviceId}`);
 };

@@ -46,6 +46,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 
+// 设置页暂时使用静态数据，展示 README 中的默认配置
 const mqttConfig = ref({
   broker: 'mqtt://localhost',
   port: 1883,

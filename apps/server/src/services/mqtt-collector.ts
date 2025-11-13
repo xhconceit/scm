@@ -10,31 +10,51 @@ import { MqttConfig } from '../types';
 import { config } from '../config/config';
 import logger from '../utils/logger';
 
+type MqttCollectorOptions = Required<Pick<MqttConfig, 'broker' | 'port'>> &
+  Required<Pick<MqttConfig, 'wsPort' | 'clientPort'>> &
+  Pick<MqttConfig, 'username' | 'password'>;
+
+/**
+ * MQTT 数据采集器
+ * - 启动内置 Aedes Broker（TCP + WebSocket）
+ * - 可选连接外部 MQTT Broker 订阅数据
+ * - 将消息解析并存储到数据库
+ */
 export class MqttCollector {
-  private broker: aedes.Aedes;
+  private readonly options: MqttCollectorOptions;
+  private readonly broker: aedes.Aedes;
   private netServer: NetServer | null = null;
   private wsServer: WebSocketServer | null = null;
   private client: MqttClient | null = null;
-  private subscribedDevices: Set<number> = new Set();
+  private readonly subscribedDevices: Set<number> = new Set();
 
-  constructor() {
+  constructor(options: Partial<MqttConfig> = {}) {
+    this.options = {
+      broker: options.broker ?? config.mqtt.broker,
+      port: options.port ?? config.mqtt.port,
+      wsPort: options.wsPort ?? config.mqtt.wsPort,
+      clientPort: options.clientPort ?? config.mqtt.clientPort,
+      username: options.username ?? (config.mqtt.username || undefined),
+      password: options.password ?? (config.mqtt.password || undefined),
+    };
+
     // 创建内置 MQTT Broker
     this.broker = aedes();
     this.setupBroker();
   }
 
   /**
-   * 设置内置 MQTT Broker
+   * 注册 Broker 的事件监听，便于排查连接、订阅、发布等行为
    */
   private setupBroker(): void {
     // 监听客户端连接
     this.broker.on('client', (client) => {
-      logger.info('MQTT client connected', { id: client.id });
+      logger.info('MQTT client connected', { id: client?.id });
     });
 
     // 监听客户端断开
     this.broker.on('clientDisconnect', (client) => {
-      logger.info('MQTT client disconnected', { id: client.id });
+      logger.info('MQTT client disconnected', { id: client?.id });
     });
 
     // 监听发布消息
@@ -51,34 +71,35 @@ export class MqttCollector {
     this.broker.on('subscribe', (subscriptions, client) => {
       logger.debug('Client subscribed', {
         subscriptions: subscriptions.map((s) => s.topic),
-        clientId: client.id,
+        clientId: client?.id,
       });
     });
   }
 
   /**
-   * 启动内置 MQTT Broker
+   * 启动内置 MQTT Broker（TCP + WebSocket）
    */
   async startBroker(): Promise<void> {
     return new Promise((resolve, reject) => {
       try {
-        // TCP 服务器
+        // TCP 服务器，用于标准 MQTT 连接
         this.netServer = createServer((stream) => {
           this.broker.handle(stream);
         });
-        this.netServer.listen(config.mqtt.port, () => {
-          logger.info(`MQTT Broker started on port ${config.mqtt.port}`);
+        this.netServer.listen(this.options.port, () => {
+          logger.info(`MQTT Broker started on port ${this.options.port}`);
         });
 
-        // WebSocket 服务器
+        // WebSocket 服务器，方便浏览器或前端调试工具连接
         const httpServer = createHttpServer();
         this.wsServer = new WebSocketServer({ server: httpServer });
-        this.wsServer.on('connection', (ws, req) => {
+        this.wsServer.on('connection', (ws) => {
+          // 将 WebSocket 转换为 Node.js Duplex 流，再交给 Aedes 处理
           const duplex = Duplex.fromWeb(ws as any);
           this.broker.handle(duplex);
         });
-        httpServer.listen(config.mqtt.wsPort, () => {
-          logger.info(`MQTT WebSocket server started on port ${config.mqtt.wsPort}`);
+        httpServer.listen(this.options.wsPort, () => {
+          logger.info(`MQTT WebSocket server started on port ${this.options.wsPort}`);
         });
 
         resolve();
@@ -90,7 +111,7 @@ export class MqttCollector {
   }
 
   /**
-   * 连接到外部 MQTT Broker（用于订阅数据）
+   * 连接到外部 MQTT Broker（用于订阅其他来源的数据）
    */
   async connectToBroker(): Promise<void> {
     if (this.client) {
@@ -100,21 +121,21 @@ export class MqttCollector {
 
     return new Promise((resolve, reject) => {
       const options: mqtt.IClientOptions = {
-        port: config.mqtt.clientPort,
+        port: this.options.clientPort,
         reconnectPeriod: 5000,
       };
 
-      if (config.mqtt.username) {
-        options.username = config.mqtt.username;
+      if (this.options.username) {
+        options.username = this.options.username;
       }
-      if (config.mqtt.password) {
-        options.password = config.mqtt.password;
+      if (this.options.password) {
+        options.password = this.options.password;
       }
 
-      this.client = mqtt.connect(config.mqtt.broker, options);
+      this.client = mqtt.connect(this.options.broker, options);
 
       this.client.on('connect', () => {
-        logger.info('Connected to MQTT broker', { broker: config.mqtt.broker });
+        logger.info('Connected to MQTT broker', { broker: this.options.broker });
         this.subscribeToAllDevices();
         resolve();
       });
@@ -139,10 +160,9 @@ export class MqttCollector {
   }
 
   /**
-   * 订阅所有设备主题
+   * 订阅所有设备主题（sugarcane harvester/+/realtime）
    */
   private subscribeToAllDevices(): void {
-    // 订阅所有设备的实时数据主题
     const topic = 'sugarcane harvester/+/realtime';
     this.client?.subscribe(topic, (err) => {
       if (err) {
@@ -154,7 +174,7 @@ export class MqttCollector {
   }
 
   /**
-   * 订阅特定设备
+   * 订阅特定设备的实时数据
    */
   subscribeDevice(deviceId: number): void {
     if (this.subscribedDevices.has(deviceId)) {
@@ -173,7 +193,7 @@ export class MqttCollector {
   }
 
   /**
-   * 处理接收到的消息
+   * 处理接收到的 MQTT 消息：解析 -> 校验 -> 持久化
    */
   private async handleMessage(topic: string, payload: Buffer): Promise<void> {
     try {
@@ -198,7 +218,7 @@ export class MqttCollector {
   }
 
   /**
-   * 断开连接
+   * 清理所有连接，释放资源
    */
   disconnect(): void {
     if (this.client) {

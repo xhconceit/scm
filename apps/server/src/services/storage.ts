@@ -2,6 +2,11 @@ import prisma from '../database/client';
 import { RealtimeMessage } from '../types';
 import logger from '../utils/logger';
 
+/**
+ * 数据存储层：
+ * - 实时数据写入 `realtime_data`
+ * - 历史数据查询支持时间范围与条数限制
+ */
 export class Storage {
   /**
    * 保存实时数据

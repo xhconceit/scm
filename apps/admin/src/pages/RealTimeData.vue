@@ -57,6 +57,7 @@ const polling = ref(false);
 let pollingTimer: number | null = null;
 
 onMounted(() => {
+  // 页面加载时预拉取设备列表供选择
   deviceStore.fetchDevices();
 });
 
@@ -68,6 +69,7 @@ const startPolling = () => {
   if (!selectedDeviceId.value) {
     return;
   }
+  // 启动 2s 一次的轮询，从后端获取最新实时数据
   polling.value = true;
   fetchData();
   pollingTimer = window.setInterval(() => {
@@ -87,6 +89,7 @@ const stopPolling = () => {
 
 const fetchData = async () => {
   if (selectedDeviceId.value) {
+    // 与 README 中的 /api/devices/:id/realtime 保持一致
     await deviceStore.fetchRealtimeData(selectedDeviceId.value);
   }
 };

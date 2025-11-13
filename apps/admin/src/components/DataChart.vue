@@ -24,6 +24,7 @@ onMounted(() => {
 watch(
   () => props.data,
   () => {
+    // 数据更新时同步刷新图表
     updateChart();
   },
   { deep: true }

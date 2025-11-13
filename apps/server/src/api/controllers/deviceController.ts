@@ -5,6 +5,9 @@ import { Validator } from '../../utils/validator';
 import logger from '../../utils/logger';
 import { ApiResponse } from '../../types';
 
+/**
+ * 设备相关 RESTful 控制器，完全对应 README 中列出的 API
+ */
 export class DeviceController {
   /**
    * 获取所有设备

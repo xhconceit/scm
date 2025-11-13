@@ -12,6 +12,9 @@
 </template>
 
 <script setup lang="ts">
+/**
+ * 模块状态展示组件，接收 18 个模块数值并以卡片形式展示
+ */
 defineProps<{
   modules: number[];
 }>();

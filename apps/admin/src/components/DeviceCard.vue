@@ -21,6 +21,9 @@ const props = defineProps<{
   device: Device;
 }>();
 
+/**
+ * 向父组件通知选中的设备 ID
+ */
 const emit = defineEmits<{
   select: [deviceId: number];
 }>();

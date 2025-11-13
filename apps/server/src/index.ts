@@ -10,27 +10,32 @@ import { MqttCollector } from './services/mqtt-collector';
 const app = new Koa();
 const router = new Router();
 
-// 中间件
+// 跨域 & JSON 解析中间件，保证前端可以直接访问
 app.use(cors());
 app.use(bodyParser());
 
-// 健康检查
+// 健康检查端点，便于 K8s / Docker Compose 做存活检测
 router.get('/health', async (ctx) => {
   ctx.body = { status: 'ok', timestamp: new Date().toISOString() };
 });
 
-// API 路由
+// RESTful API 路由，与 README 中的接口列表保持一致
 router.use('/api', deviceRoutes.routes());
 
 app.use(router.routes());
 app.use(router.allowedMethods());
 
-// 错误处理
+// 全局错误日志，统一输出到 Winston
 app.on('error', (err, ctx) => {
   logger.error('Application error', { error: err, path: ctx.path });
 });
 
-// 启动服务器
+/**
+ * 应用启动入口：
+ * 1. 启动内置 MQTT Broker（TCP + WebSocket）
+ * 2. 可选连接外部 Broker 拉取数据
+ * 3. 启动 Koa HTTP 服务，暴露 RESTful API
+ */
 async function startServer() {
   try {
     // 启动内置 MQTT Broker

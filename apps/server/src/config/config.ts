@@ -2,6 +2,9 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
+/**
+ * 应用运行时配置，优先读取环境变量，缺省时回退到 README 推荐值
+ */
 export const config = {
   port: parseInt(process.env.PORT || '3000', 10),
   httpPort: parseInt(process.env.HTTP_PORT || '3000', 10),

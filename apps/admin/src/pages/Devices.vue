@@ -64,12 +64,17 @@ import { useRouter } from 'vue-router';
 const deviceStore = useDeviceStore();
 const router = useRouter();
 const showCreateDialog = ref(false);
+// 默认从 1001 开始，便于演示 README 中的样例
 const newDevice = ref({ deviceId: 1001, name: '' });
 
 onMounted(() => {
+  // 打开页面时即加载设备列表
   deviceStore.fetchDevices();
 });
 
+/**
+ * 提交创建设备表单，成功后刷新列表并重置表单
+ */
 const handleCreate = async () => {
   if (!newDevice.value.name.trim()) {
     ElMessage.warning('请输入设备名称');
@@ -88,10 +93,16 @@ const handleCreate = async () => {
   }
 };
 
+/**
+ * 跳转到设备详情页，保持与 README 提供的导航一致
+ */
 const handleView = (deviceId: number) => {
   router.push(`/devices/${deviceId}`);
 };
 
+/**
+ * 删除设备前弹出确认框，删除成功后刷新数据
+ */
 const handleDelete = async (deviceId: number) => {
   try {
     await ElMessageBox.confirm('确定要删除该设备吗？', '提示', {

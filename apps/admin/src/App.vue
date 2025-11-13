@@ -27,6 +27,7 @@ import { computed } from 'vue';
 import { useRoute } from 'vue-router';
 
 const route = useRoute();
+// 将当前路由同步到顶栏导航的激活状态
 const activeMenu = computed(() => route.path);
 </script>
 

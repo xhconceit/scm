@@ -1,10 +1,14 @@
-// 消息数据类型
+/**
+ * 与 README 中保持一致的实时消息类型
+ */
 export interface RealtimeMessage {
   type: 1 | 2;
-  module: number[]; // 长度为 18
+  module: number[];
 }
 
-// 设备类型
+/**
+ * 设备类型定义，对应后端返回的字段
+ */
 export interface Device {
   id: number;
   deviceId: number;
@@ -14,7 +18,9 @@ export interface Device {
   updatedAt: string;
 }
 
-// API 响应格式
+/**
+ * 后端统一响应结构
+ */
 export interface ApiResponse<T = any> {
   success: boolean;
   data?: T;
@@ -22,7 +28,9 @@ export interface ApiResponse<T = any> {
   error?: string;
 }
 
-// 历史数据
+/**
+ * 设备历史数据
+ */
 export interface HistoryData {
   id: number;
   deviceId: number;

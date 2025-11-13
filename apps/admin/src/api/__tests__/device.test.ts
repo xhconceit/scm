@@ -2,8 +2,26 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import axios from 'axios';
 import { deviceApi } from '../device';
 
-vi.mock('axios');
-const mockedAxios = axios as any;
+vi.mock('axios', () => {
+  const mockAxios = {
+    create: vi.fn(),
+    get: vi.fn(),
+    post: vi.fn(),
+    put: vi.fn(),
+    delete: vi.fn(),
+  };
+  // axios.create() 返回 axios 实例本身，便于统一断言
+  mockAxios.create.mockReturnValue(mockAxios);
+  return mockAxios;
+});
+
+const mockedAxios = axios as unknown as {
+  create: ReturnType<typeof vi.fn>;
+  get: ReturnType<typeof vi.fn>;
+  post: ReturnType<typeof vi.fn>;
+  put: ReturnType<typeof vi.fn>;
+  delete: ReturnType<typeof vi.fn>;
+};
 
 describe('Device API', () => {
   beforeEach(() => {

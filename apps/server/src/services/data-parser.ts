@@ -2,6 +2,11 @@ import { RealtimeMessage } from '../types';
 import { Validator } from '../utils/validator';
 import logger from '../utils/logger';
 
+/**
+ * MQTT 消息解析工具：
+ * - JSON 解析 & 类型校验
+ * - Topic 中设备ID提取
+ */
 export class DataParser {
   /**
    * 解析 MQTT 消息
