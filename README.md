@@ -31,11 +31,12 @@ sugarcane harvester/1001/realtime
 #### 字段说明
 
 - **type**: 数据类型标识
-  - `1`: 类型一数据（18个模块数据）
-  - `2`: 类型二数据（18个模块数据）
-  
+
+  - `1`: 类型一数据（18 个模块数据）
+  - `2`: 类型二数据（18 个模块数据）
+
 - **module**: 模块数据数组
-  - 长度: 18个元素
+  - 长度: 18 个元素
   - 数据类型: 整型数值
   - 含义: 各个模块的实时状态值
 
@@ -101,11 +102,13 @@ make ps
 #### 环境要求
 
 **使用 Docker（推荐）：**
+
 - Docker 20.10+
 - Docker Compose 2.0+
 - Make（可选）
 
 **本地开发：**
+
 - Node.js 18+
 - pnpm 8+
 - TypeScript 5.0+
@@ -135,7 +138,14 @@ cd scm
 pnpm install
 ```
 
-这将安装所有子项目的依赖。
+这将安装所有子项目的依赖（包括 TSX 支持所需的 `@vitejs/plugin-vue-jsx`）。
+
+如果需要单独为 Admin 项目添加 TSX 支持：
+
+```bash
+cd apps/admin
+pnpm add -D @vitejs/plugin-vue-jsx
+```
 
 ### 配置说明
 
@@ -355,6 +365,7 @@ scm/
 ## 技术栈
 
 ### Server（后端）
+
 - **Node.js**: JavaScript 运行时环境
 - **TypeScript**: 类型安全的 JavaScript 超集
 - **Koa**: 轻量级 Web 应用框架
@@ -365,8 +376,10 @@ scm/
 - **Jest**: 测试框架
 
 ### Admin（前端）
-- **Vue 3**: 渐进式前端框架
+
+- **Vue 3**: 渐进式前端框架（支持 TSX）
 - **TypeScript**: 类型安全
+- **TSX/JSX**: 支持 TypeScript + JSX 语法
 - **Vite**: 下一代前端构建工具
 - **Pinia**: Vue 状态管理
 - **Vue Router**: 路由管理
@@ -381,8 +394,8 @@ scm/
 
 ```yaml
 packages:
-  - 'apps/*'
-  - 'packages/*'
+  - "apps/*"
+  - "packages/*"
 ```
 
 ## 主要依赖
@@ -436,6 +449,7 @@ packages:
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^4.4.0",
+    "@vitejs/plugin-vue-jsx": "^3.1.0",
     "vite": "^5.0.0",
     "typescript": "^5.0.0",
     "tailwindcss": "^3.3.0",
@@ -455,9 +469,9 @@ packages:
 
 ```typescript
 // apps/server/src/services/mqtt-collector.ts
-import mqtt from 'mqtt';
-import { RealtimeMessage } from '../types';
-import { DataParser } from './data-parser';
+import mqtt from "mqtt";
+import { RealtimeMessage } from "../types";
+import { DataParser } from "./data-parser";
 
 export class MqttCollector {
   private client: mqtt.MqttClient;
@@ -477,7 +491,7 @@ export class MqttCollector {
       }
     });
 
-    this.client.on('message', (topic, payload) => {
+    this.client.on("message", (topic, payload) => {
       const data = DataParser.parse(payload.toString());
       this.handleRealtimeData(data);
     });
@@ -486,7 +500,7 @@ export class MqttCollector {
   private handleRealtimeData(message: RealtimeMessage) {
     // 保存到数据库
     // 触发 WebSocket 推送
-    console.log('接收数据:', message);
+    console.log("接收数据:", message);
   }
 }
 ```
@@ -495,34 +509,40 @@ export class MqttCollector {
 
 ```typescript
 // apps/server/src/api/routes/devices.ts
-import Router from '@koa/router';
-import { Context } from 'koa';
+import Router from "@koa/router";
+import { Context } from "koa";
 
 const router = new Router();
 
 // 获取所有设备
-router.get('/devices', async (ctx: Context) => {
+router.get("/devices", async (ctx: Context) => {
   ctx.body = {
     success: true,
-    data: [/* 设备列表 */],
+    data: [
+      /* 设备列表 */
+    ],
   };
 });
 
 // 获取设备实时数据
-router.get('/devices/:id/realtime', async (ctx: Context) => {
+router.get("/devices/:id/realtime", async (ctx: Context) => {
   const { id } = ctx.params;
   ctx.body = {
     success: true,
-    data: {/* 实时数据 */},
+    data: {
+      /* 实时数据 */
+    },
   };
 });
 
 // 获取设备历史数据
-router.get('/devices/:id/history', async (ctx: Context) => {
+router.get("/devices/:id/history", async (ctx: Context) => {
   const { id } = ctx.params;
   ctx.body = {
     success: true,
-    data: {/* 历史数据 */},
+    data: {
+      /* 历史数据 */
+    },
   };
 });
 
@@ -533,8 +553,8 @@ export default router;
 
 ```typescript
 // apps/admin/src/api/device.ts
-import axios from 'axios';
-import { RealtimeMessage } from '../types';
+import axios from "axios";
+import { RealtimeMessage } from "../types";
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
@@ -542,19 +562,19 @@ const api = axios.create({
 
 export const deviceApi = {
   // 获取所有设备
-  getDevices: () => api.get('/api/devices'),
-  
+  getDevices: () => api.get("/api/devices"),
+
   // 获取设备实时数据
-  getRealtimeData: (deviceId: number) => 
+  getRealtimeData: (deviceId: number) =>
     api.get<RealtimeMessage>(`/api/devices/${deviceId}/realtime`),
-  
+
   // 获取设备历史数据
   getHistoryData: (deviceId: number, params: any) =>
     api.get(`/api/devices/${deviceId}/history`, { params }),
 };
 ```
 
-### Admin - 组件使用
+### Admin - 组件使用（SFC 方式）
 
 ```vue
 <!-- apps/admin/src/pages/RealTimeData.vue -->
@@ -571,9 +591,9 @@ export const deviceApi = {
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
-import { deviceApi } from '../api/device';
-import ModuleStatus from '../components/ModuleStatus.vue';
+import { ref, onMounted } from "vue";
+import { deviceApi } from "../api/device";
+import ModuleStatus from "../components/ModuleStatus.vue";
 
 const realtimeData = ref(null);
 
@@ -584,29 +604,112 @@ onMounted(async () => {
 </script>
 ```
 
+### Admin - 组件使用（TSX 方式）
+
+```tsx
+// apps/admin/src/pages/RealTimeData.tsx
+import { defineComponent, ref, onMounted } from "vue";
+import { ElCard } from "element-plus";
+import { deviceApi } from "../api/device";
+import ModuleStatus from "../components/ModuleStatus";
+import type { RealtimeMessage } from "../types";
+
+export default defineComponent({
+  name: "RealTimeData",
+  setup() {
+    const realtimeData = ref<RealtimeMessage | null>(null);
+
+    onMounted(async () => {
+      const { data } = await deviceApi.getRealtimeData(1001);
+      realtimeData.value = data;
+    });
+
+    return () => (
+      <div class="realtime-data">
+        <ElCard>
+          <h2>实时数据监控</h2>
+          {realtimeData.value && (
+            <div>
+              <p>数据类型: {realtimeData.value.type}</p>
+              <ModuleStatus modules={realtimeData.value.module} />
+            </div>
+          )}
+        </ElCard>
+      </div>
+    );
+  },
+});
+```
+
+### Admin - 函数式组件（TSX）
+
+```tsx
+// apps/admin/src/components/DeviceCard.tsx
+import { defineComponent } from "vue";
+import { ElCard, ElTag } from "element-plus";
+import type { PropType } from "vue";
+
+interface Device {
+  id: number;
+  name: string;
+  status: "online" | "offline";
+}
+
+export default defineComponent({
+  name: "DeviceCard",
+  props: {
+    device: {
+      type: Object as PropType<Device>,
+      required: true,
+    },
+  },
+  emits: ["select"],
+  setup(props, { emit }) {
+    const handleClick = () => {
+      emit("select", props.device.id);
+    };
+
+    const statusColor = () => {
+      return props.device.status === "online" ? "success" : "danger";
+    };
+
+    return () => (
+      <ElCard class="device-card" onClick={handleClick}>
+        <div class="device-info">
+          <h3>{props.device.name}</h3>
+          <ElTag type={statusColor()}>
+            {props.device.status === "online" ? "在线" : "离线"}
+          </ElTag>
+        </div>
+      </ElCard>
+    );
+  },
+});
+```
+
 ### Server - 单元测试示例
 
 ```typescript
 // apps/server/src/api/routes/__tests__/devices.test.ts
-import request from 'supertest';
-import Koa from 'koa';
-import Router from '@koa/router';
-import deviceRoutes from '../devices';
+import request from "supertest";
+import Koa from "koa";
+import Router from "@koa/router";
+import deviceRoutes from "../devices";
 
-describe('Device API', () => {
+describe("Device API", () => {
   let app: Koa;
 
   beforeAll(() => {
     app = new Koa();
     const router = new Router();
-    router.use('/api', deviceRoutes.routes());
+    router.use("/api", deviceRoutes.routes());
     app.use(router.routes());
   });
 
-  describe('GET /api/devices', () => {
-    it('should return all devices', async () => {
+  describe("GET /api/devices", () => {
+    it("should return all devices", async () => {
       const response = await request(app.callback())
-        .get('/api/devices')
+        .get("/api/devices")
         .expect(200);
 
       expect(response.body.success).toBe(true);
@@ -614,10 +717,10 @@ describe('Device API', () => {
     });
   });
 
-  describe('GET /api/devices/:id', () => {
-    it('should return device by id', async () => {
+  describe("GET /api/devices/:id", () => {
+    it("should return device by id", async () => {
       const response = await request(app.callback())
-        .get('/api/devices/1001')
+        .get("/api/devices/1001")
         .expect(200);
 
       expect(response.body.success).toBe(true);
@@ -631,14 +734,14 @@ describe('Device API', () => {
 
 ```typescript
 // apps/server/src/services/__tests__/mqtt-collector.test.ts
-import { MqttCollector } from '../mqtt-collector';
+import { MqttCollector } from "../mqtt-collector";
 
-describe('MqttCollector', () => {
+describe("MqttCollector", () => {
   let collector: MqttCollector;
 
   beforeEach(() => {
     collector = new MqttCollector({
-      broker: 'mqtt://localhost',
+      broker: "mqtt://localhost",
       port: 1883,
     });
   });
@@ -647,23 +750,21 @@ describe('MqttCollector', () => {
     collector.disconnect();
   });
 
-  it('should connect to MQTT broker', async () => {
+  it("should connect to MQTT broker", async () => {
     await expect(collector.connect()).resolves.not.toThrow();
   });
 
-  it('should subscribe to topic', async () => {
+  it("should subscribe to topic", async () => {
     await collector.connect();
-    await expect(
-      collector.subscribe('test/topic')
-    ).resolves.not.toThrow();
+    await expect(collector.subscribe("test/topic")).resolves.not.toThrow();
   });
 
-  it('should parse incoming message', () => {
+  it("should parse incoming message", () => {
     const payload = JSON.stringify({
       type: 1,
       module: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     });
-    
+
     const result = collector.parseMessage(payload);
     expect(result.type).toBe(1);
     expect(result.module).toHaveLength(18);
@@ -675,36 +776,36 @@ describe('MqttCollector', () => {
 
 ```typescript
 // apps/admin/src/components/__tests__/DeviceCard.test.ts
-import { mount } from '@vue/test-utils';
-import { describe, it, expect } from 'vitest';
-import DeviceCard from '../DeviceCard.vue';
+import { mount } from "@vue/test-utils";
+import { describe, it, expect } from "vitest";
+import DeviceCard from "../DeviceCard.vue";
 
-describe('DeviceCard', () => {
-  it('renders device information', () => {
+describe("DeviceCard", () => {
+  it("renders device information", () => {
     const wrapper = mount(DeviceCard, {
       props: {
         device: {
           id: 1001,
-          name: '甘蔗收割机 #1001',
-          status: 'online',
+          name: "甘蔗收割机 #1001",
+          status: "online",
         },
       },
     });
 
-    expect(wrapper.text()).toContain('甘蔗收割机 #1001');
-    expect(wrapper.find('.status').text()).toBe('online');
+    expect(wrapper.text()).toContain("甘蔗收割机 #1001");
+    expect(wrapper.find(".status").text()).toBe("online");
   });
 
-  it('emits event when clicked', async () => {
+  it("emits event when clicked", async () => {
     const wrapper = mount(DeviceCard, {
       props: {
-        device: { id: 1001, name: 'Test', status: 'online' },
+        device: { id: 1001, name: "Test", status: "online" },
       },
     });
 
-    await wrapper.trigger('click');
-    expect(wrapper.emitted()).toHaveProperty('select');
-    expect(wrapper.emitted('select')?.[0]).toEqual([1001]);
+    await wrapper.trigger("click");
+    expect(wrapper.emitted()).toHaveProperty("select");
+    expect(wrapper.emitted("select")?.[0]).toEqual([1001]);
   });
 });
 ```
@@ -713,28 +814,28 @@ describe('DeviceCard', () => {
 
 ```typescript
 // apps/admin/src/api/__tests__/device.test.ts
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import axios from 'axios';
-import { deviceApi } from '../device';
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import axios from "axios";
+import { deviceApi } from "../device";
 
-vi.mock('axios');
+vi.mock("axios");
 
-describe('Device API', () => {
+describe("Device API", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it('should fetch all devices', async () => {
+  it("should fetch all devices", async () => {
     const mockData = { success: true, data: [] };
     vi.mocked(axios.get).mockResolvedValue({ data: mockData });
 
     const result = await deviceApi.getDevices();
-    
-    expect(axios.get).toHaveBeenCalledWith('/api/devices');
+
+    expect(axios.get).toHaveBeenCalledWith("/api/devices");
     expect(result.data).toEqual(mockData);
   });
 
-  it('should fetch realtime data', async () => {
+  it("should fetch realtime data", async () => {
     const mockData = {
       success: true,
       data: { type: 1, module: [] },
@@ -742,12 +843,389 @@ describe('Device API', () => {
     vi.mocked(axios.get).mockResolvedValue({ data: mockData });
 
     const result = await deviceApi.getRealtimeData(1001);
-    
-    expect(axios.get).toHaveBeenCalledWith('/api/devices/1001/realtime');
+
+    expect(axios.get).toHaveBeenCalledWith("/api/devices/1001/realtime");
     expect(result.data).toEqual(mockData);
   });
 });
 ```
+
+### Admin - TSX 组件测试示例
+
+```typescript
+// apps/admin/src/components/__tests__/Counter.test.tsx
+import { mount } from "@vue/test-utils";
+import { describe, it, expect } from "vitest";
+import Counter from "../Counter";
+
+describe("Counter (TSX)", () => {
+  it("renders initial count", () => {
+    const wrapper = mount(Counter);
+    expect(wrapper.text()).toContain("计数: 0");
+  });
+
+  it("increments count when button clicked", async () => {
+    const wrapper = mount(Counter);
+    const button = wrapper.find("button");
+
+    await button.trigger("click");
+    expect(wrapper.text()).toContain("计数: 1");
+
+    await button.trigger("click");
+    expect(wrapper.text()).toContain("计数: 2");
+  });
+
+  it("emits change event with new value", async () => {
+    const wrapper = mount(Counter);
+    await wrapper.find("button").trigger("click");
+
+    expect(wrapper.emitted()).toHaveProperty("change");
+    expect(wrapper.emitted("change")?.[0]).toEqual([1]);
+  });
+});
+```
+
+## Vue TSX 开发指南
+
+项目已配置支持 **TSX (TypeScript + JSX)** 语法，您可以同时使用 `.vue` 和 `.tsx` 文件编写组件。
+
+### TSX 配置说明
+
+#### Vite 配置
+
+```typescript
+// apps/admin/vite.config.ts
+import { defineConfig } from "vite";
+import vue from "@vitejs/plugin-vue";
+import vueJsx from "@vitejs/plugin-vue-jsx";
+
+export default defineConfig({
+  plugins: [
+    vue(), // 支持 .vue 文件
+    vueJsx(), // 支持 .tsx/.jsx 文件
+  ],
+});
+```
+
+#### TypeScript 配置
+
+```json
+// apps/admin/tsconfig.json
+{
+  "compilerOptions": {
+    "jsx": "preserve",
+    "jsxImportSource": "vue"
+  }
+}
+```
+
+### TSX 组件编写方式
+
+#### 1. 基础组件（defineComponent）
+
+```tsx
+import { defineComponent } from "vue";
+
+export default defineComponent({
+  name: "MyComponent",
+  setup() {
+    return () => (
+      <div class="my-component">
+        <h1>Hello TSX!</h1>
+      </div>
+    );
+  },
+});
+```
+
+#### 2. 带 Props 的组件
+
+```tsx
+import { defineComponent, type PropType } from "vue";
+
+interface User {
+  name: string;
+  age: number;
+}
+
+export default defineComponent({
+  name: "UserCard",
+  props: {
+    user: {
+      type: Object as PropType<User>,
+      required: true,
+    },
+    showAge: {
+      type: Boolean,
+      default: false,
+    },
+  },
+  setup(props) {
+    return () => (
+      <div class="user-card">
+        <h3>{props.user.name}</h3>
+        {props.showAge && <p>年龄: {props.user.age}</p>}
+      </div>
+    );
+  },
+});
+```
+
+#### 3. 带状态和事件的组件
+
+```tsx
+import { defineComponent, ref } from "vue";
+import { ElButton } from "element-plus";
+
+export default defineComponent({
+  name: "Counter",
+  emits: ["change"],
+  setup(_, { emit }) {
+    const count = ref(0);
+
+    const increment = () => {
+      count.value++;
+      emit("change", count.value);
+    };
+
+    return () => (
+      <div class="counter">
+        <p>计数: {count.value}</p>
+        <ElButton onClick={increment}>增加</ElButton>
+      </div>
+    );
+  },
+});
+```
+
+#### 4. 使用组合式 API
+
+```tsx
+import { defineComponent, ref, computed, onMounted } from "vue";
+
+export default defineComponent({
+  name: "DataList",
+  setup() {
+    const items = ref<string[]>([]);
+    const loading = ref(false);
+
+    const itemCount = computed(() => items.value.length);
+
+    const fetchData = async () => {
+      loading.value = true;
+      // 模拟 API 调用
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      items.value = ["Item 1", "Item 2", "Item 3"];
+      loading.value = false;
+    };
+
+    onMounted(() => {
+      fetchData();
+    });
+
+    return () => (
+      <div class="data-list">
+        {loading.value ? (
+          <p>加载中...</p>
+        ) : (
+          <div>
+            <p>共 {itemCount.value} 项</p>
+            <ul>
+              {items.value.map((item, index) => (
+                <li key={index}>{item}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
+    );
+  },
+});
+```
+
+#### 5. 条件渲染与列表渲染
+
+```tsx
+import { defineComponent, ref } from "vue";
+
+export default defineComponent({
+  name: "TodoList",
+  setup() {
+    const todos = ref([
+      { id: 1, text: "学习 Vue", done: true },
+      { id: 2, text: "学习 TSX", done: false },
+      { id: 3, text: "构建项目", done: false },
+    ]);
+
+    const filter = ref<"all" | "active" | "completed">("all");
+
+    const filteredTodos = computed(() => {
+      if (filter.value === "active") {
+        return todos.value.filter((t) => !t.done);
+      }
+      if (filter.value === "completed") {
+        return todos.value.filter((t) => t.done);
+      }
+      return todos.value;
+    });
+
+    return () => (
+      <div class="todo-list">
+        <div class="filters">
+          <button onClick={() => (filter.value = "all")}>全部</button>
+          <button onClick={() => (filter.value = "active")}>未完成</button>
+          <button onClick={() => (filter.value = "completed")}>已完成</button>
+        </div>
+
+        <ul>
+          {filteredTodos.value.map((todo) => (
+            <li key={todo.id} class={{ done: todo.done }}>
+              {todo.text}
+            </li>
+          ))}
+        </ul>
+      </div>
+    );
+  },
+});
+```
+
+#### 6. 插槽使用
+
+```tsx
+import { defineComponent } from "vue";
+
+export default defineComponent({
+  name: "Card",
+  setup(_, { slots }) {
+    return () => (
+      <div class="card">
+        <div class="card-header">{slots.header?.()}</div>
+        <div class="card-body">{slots.default?.()}</div>
+        <div class="card-footer">{slots.footer?.()}</div>
+      </div>
+    );
+  },
+});
+
+// 使用方式
+<Card>
+  {{
+    header: () => <h2>标题</h2>,
+    default: () => <p>内容</p>,
+    footer: () => <button>确定</button>,
+  }}
+</Card>;
+```
+
+#### 7. 与 Element Plus 集成
+
+```tsx
+import { defineComponent, ref } from "vue";
+import {
+  ElCard,
+  ElTable,
+  ElTableColumn,
+  ElButton,
+  ElMessage,
+} from "element-plus";
+
+interface TableData {
+  id: number;
+  name: string;
+  status: string;
+}
+
+export default defineComponent({
+  name: "DeviceTable",
+  setup() {
+    const tableData = ref<TableData[]>([
+      { id: 1, name: "设备1", status: "online" },
+      { id: 2, name: "设备2", status: "offline" },
+    ]);
+
+    const handleView = (row: TableData) => {
+      ElMessage.success(`查看设备: ${row.name}`);
+    };
+
+    return () => (
+      <ElCard>
+        <ElTable data={tableData.value}>
+          <ElTableColumn prop="id" label="ID" width="80" />
+          <ElTableColumn prop="name" label="设备名称" />
+          <ElTableColumn prop="status" label="状态" />
+          <ElTableColumn label="操作">
+            {{
+              default: ({ row }: { row: TableData }) => (
+                <ElButton
+                  type="primary"
+                  size="small"
+                  onClick={() => handleView(row)}
+                >
+                  查看
+                </ElButton>
+              ),
+            }}
+          </ElTableColumn>
+        </ElTable>
+      </ElCard>
+    );
+  },
+});
+```
+
+### TSX vs SFC 对比
+
+| 特性         | TSX                           | SFC (.vue)           |
+| ------------ | ----------------------------- | -------------------- |
+| **类型安全** | ✅ 完全的 TypeScript 类型推断 | ⚠️ 需要额外配置      |
+| **IDE 支持** | ✅ 原生 TypeScript 支持       | ✅ 需要 Volar 插件   |
+| **模板语法** | ❌ 使用 JSX 语法              | ✅ 使用 Vue 模板语法 |
+| **样式隔离** | ❌ 需要 CSS-in-JS 或外部样式  | ✅ 内置 scoped 样式  |
+| **学习曲线** | React 开发者友好              | Vue 开发者友好       |
+| **代码组织** | ✅ 逻辑和视图在一起           | ⚠️ 模板和逻辑分离    |
+
+### 使用建议
+
+1. **复杂业务逻辑组件**: 推荐使用 TSX，更好的类型推断
+2. **展示型组件**: 可以使用 SFC，模板更直观
+3. **需要大量条件渲染**: TSX 更灵活
+4. **需要样式隔离**: SFC 更方便
+
+### 注意事项
+
+1. **属性绑定**:
+
+   - TSX: `<div class="foo">`
+   - SFC: `<div class="foo">`
+
+2. **事件绑定**:
+
+   - TSX: `<button onClick={handler}>`
+   - SFC: `<button @click="handler">`
+
+3. **v-model**:
+
+   ```tsx
+   // TSX 需要手动实现
+   <input
+     value={value.value}
+     onInput={(e) => value.value = e.target.value}
+   />
+
+   // 或使用 v-model（需要额外配置）
+   <input v-model={value.value} />
+   ```
+
+4. **动态类名**:
+
+   ```tsx
+   // 对象方式
+   <div class={{ active: isActive.value, disabled: isDisabled.value }} />
+
+   // 数组方式
+   <div class={['base-class', isActive.value && 'active']} />
+   ```
 
 ## 开发指南
 
@@ -824,13 +1302,13 @@ export class DataParser {
 
 ```typescript
 // apps/server/src/api/routes/devices.ts
-router.post('/devices/:id/control', async (ctx: Context) => {
+router.post("/devices/:id/control", async (ctx: Context) => {
   const { id } = ctx.params;
   const { action } = ctx.request.body;
-  
+
   ctx.body = {
     success: true,
-    message: 'Control command sent',
+    message: "Control command sent",
   };
 });
 ```
@@ -1072,16 +1550,19 @@ cd apps/admin/dist
 项目通过 Docker Compose 编排以下服务：
 
 1. **postgres**: PostgreSQL 15 数据库
+
    - 持久化数据存储
    - 健康检查机制
    - 数据卷挂载
 
 2. **mqtt**: Aedes MQTT Broker（可选独立部署）
+
    - 轻量级 MQTT 消息代理
    - 基于 Node.js
    - 可集成到应用或独立运行
 
 3. **server**: Node.js 后端服务
+
    - 多阶段构建优化镜像大小
    - 自动运行数据库迁移
    - 健康检查端点
@@ -1210,6 +1691,7 @@ pnpm prisma migrate dev
 ### 5. Admin 无法连接到 Server？
 
 检查：
+
 1. Server 是否正在运行
 2. Admin 的 `.env` 文件中 `VITE_API_URL` 是否正确
 3. Server 的 CORS 配置是否允许 Admin 的域名
@@ -1264,6 +1746,7 @@ mqtt pub -t 'sugarcane harvester/1001/realtime' -h localhost -p 1883 \
 ```
 
 推荐使用的 MQTT 客户端工具：
+
 - **MQTTX**: 跨平台 MQTT 桌面客户端
 - **MQTT Explorer**: 功能丰富的图形化工具
 - **mosquitto_pub/sub**: 命令行工具
