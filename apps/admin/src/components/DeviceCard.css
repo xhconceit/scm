@@ -1,0 +1,25 @@
+.device-card {
+  margin-bottom: 10px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.device-card:hover {
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+}
+
+.card-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.device-info h3 {
+  margin: 0 0 5px 0;
+}
+
+.device-info p {
+  margin: 0;
+  color: #909399;
+  font-size: 14px;
+}

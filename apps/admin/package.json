@@ -11,8 +11,8 @@
     "test:watch": "vitest --watch",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --coverage",
-    "lint": "eslint src --ext .ts,.vue",
-    "lint:fix": "eslint src --ext .ts,.vue --fix",
+    "lint": "eslint src --ext .ts,.tsx",
+    "lint:fix": "eslint src --ext .ts,.tsx --fix",
     "clean": "rm -rf dist node_modules"
   },
   "dependencies": {
@@ -26,6 +26,7 @@
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^4.4.0",
+    "@vitejs/plugin-vue-jsx": "^5.1.1",
     "vite": "^5.0.0",
     "typescript": "^5.0.0",
     "vue-tsc": "^1.8.0",

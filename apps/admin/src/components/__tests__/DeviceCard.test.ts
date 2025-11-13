@@ -1,6 +1,6 @@
 import { mount } from '@vue/test-utils';
 import { describe, it, expect } from 'vitest';
-import DeviceCard from '../DeviceCard.vue';
+import DeviceCard from '../DeviceCard';
 import { Device } from '../../types';
 
 describe('DeviceCard', () => {

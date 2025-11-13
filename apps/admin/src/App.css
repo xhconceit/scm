@@ -1,0 +1,42 @@
+.app-container {
+  height: 100vh;
+}
+
+.app-header {
+  background-color: #409eff;
+  color: #fff;
+  padding: 0;
+}
+
+.header-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 100%;
+  padding: 0 20px;
+}
+
+.app-title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.header-menu {
+  background-color: transparent;
+  border-bottom: none;
+}
+
+.header-menu .el-menu-item {
+  color: #fff;
+}
+
+.header-menu .el-menu-item.is-active {
+  background-color: rgba(255, 255, 255, 0.2);
+  color: #fff;
+}
+
+.app-main {
+  padding: 20px;
+  background-color: #f5f5f5;
+}
