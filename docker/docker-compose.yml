@@ -1,0 +1,108 @@
+version: '3.8'
+
+services:
+  # PostgreSQL 数据库
+  postgres:
+    image: postgres:15-alpine
+    container_name: scm-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: scm
+      POSTGRES_USER: scmuser
+      POSTGRES_PASSWORD: scmpassword
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - scm-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U scmuser -d scm"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # MQTT Broker (EMQX)
+  mqtt:
+    image: emqx/emqx:5.3.0
+    container_name: scm-mqtt
+    restart: unless-stopped
+    environment:
+      - EMQX_NAME=scm-mqtt
+      - EMQX_HOST=0.0.0.0
+    ports:
+      - "1883:1883"      # MQTT
+      - "8083:8083"      # MQTT over WebSocket
+      - "18083:18083"    # Dashboard
+    volumes:
+      - emqx_data:/opt/emqx/data
+      - emqx_log:/opt/emqx/log
+    networks:
+      - scm-network
+    healthcheck:
+      test: ["CMD", "emqx", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Server 服务
+  server:
+    build:
+      context: ..
+      dockerfile: docker/server/Dockerfile
+    container_name: scm-server
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mqtt:
+        condition: service_healthy
+    environment:
+      # MQTT 配置
+      MQTT_BROKER: mqtt://mqtt
+      MQTT_PORT: 1883
+      MQTT_USERNAME: ""
+      MQTT_PASSWORD: ""
+      
+      # 数据库配置
+      DATABASE_URL: postgresql://scmuser:scmpassword@postgres:5432/scm
+      
+      # 服务端口
+      PORT: 3000
+      NODE_ENV: production
+    ports:
+      - "3000:3000"
+    networks:
+      - scm-network
+    volumes:
+      - ./apps/server/prisma:/app/apps/server/prisma
+    command: sh -c "pnpm prisma migrate deploy && node dist/index.js"
+
+  # Admin 前端服务
+  admin:
+    build:
+      context: ..
+      dockerfile: docker/admin/Dockerfile
+      args:
+        VITE_API_URL: http://localhost:3000
+    container_name: scm-admin
+    restart: unless-stopped
+    depends_on:
+      - server
+    ports:
+      - "8080:80"
+    networks:
+      - scm-network
+
+networks:
+  scm-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local
+  emqx_data:
+    driver: local
+  emqx_log:
+    driver: local
+

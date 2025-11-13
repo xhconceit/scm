@@ -1,0 +1,248 @@
+# ==========================================
+# SCM 项目 Git 忽略文件
+# ==========================================
+
+# ==========================================
+# Node.js 依赖
+# ==========================================
+node_modules/
+**/node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# ==========================================
+# 构建输出
+# ==========================================
+dist/
+**/dist/
+build/
+**/build/
+out/
+.output/
+.cache/
+
+# ==========================================
+# 环境变量文件
+# ==========================================
+.env
+.env.local
+.env.*.local
+.env.development.local
+.env.test.local
+.env.production.local
+**/.env
+**/.env.local
+
+# 保留示例文件
+!.env.example
+!**/.env.example
+
+# ==========================================
+# 日志文件
+# ==========================================
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# ==========================================
+# 测试覆盖率
+# ==========================================
+coverage/
+**/coverage/
+*.lcov
+.nyc_output/
+jest-coverage/
+
+# ==========================================
+# TypeScript
+# ==========================================
+*.tsbuildinfo
+tsconfig.tsbuildinfo
+
+# ==========================================
+# 编辑器 & IDE
+# ==========================================
+# VSCode
+.vscode/
+!.vscode/extensions.json
+!.vscode/settings.json.example
+
+# JetBrains IDEs (WebStorm, IntelliJ, etc.)
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+*.swp
+*.swo
+*~
+.vim/
+
+# Emacs
+*~
+\#*\#
+.\#*
+
+# ==========================================
+# 操作系统文件
+# ==========================================
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~
+
+# ==========================================
+# Docker
+# ==========================================
+.dockerignore.backup
+docker-compose.override.yml
+
+# ==========================================
+# 数据库
+# ==========================================
+# SQLite
+*.db
+*.sqlite
+*.sqlite3
+
+# PostgreSQL
+*.sql.gz
+
+# Prisma
+prisma/migrations/**/migration.sql.backup
+
+# ==========================================
+# 前端相关
+# ==========================================
+# Vite
+.vite-cache/
+vite.config.*.timestamp-*
+
+# Nuxt
+.nuxt/
+.output/
+
+# Next.js
+.next/
+
+# ==========================================
+# 打包文件
+# ==========================================
+*.tgz
+*.zip
+*.tar.gz
+*.rar
+
+# ==========================================
+# 临时文件
+# ==========================================
+tmp/
+temp/
+*.tmp
+*.bak
+*.backup
+
+# ==========================================
+# 锁文件（可选，根据团队决定）
+# ==========================================
+# 如果使用 pnpm，保留 pnpm-lock.yaml
+# package-lock.json
+# yarn.lock
+
+# ==========================================
+# 其他
+# ==========================================
+# Sentry
+.sentryclirc
+
+# Yarn
+.yarn/*
+!.yarn/cache
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+
+# Turborepo
+.turbo/
+
+# Vercel
+.vercel
+
+# 证书和密钥
+*.pem
+*.key
+*.cert
+*.crt
+
+# 备份文件
+*.orig
+
+# 性能分析
+*.cpuprofile
+*.heapprofile
+*.heapsnapshot
+
+# 压力测试结果
+benchmark-results/
+
+# 文档生成
+docs/.vitepress/cache
+docs/.vitepress/dist
+
+# Storybook
+storybook-static/
+
+# Cypress
+cypress/videos/
+cypress/screenshots/
+
+# Playwright
+playwright-report/
+test-results/
+
+# ==========================================
+# 项目特定
+# ==========================================
+# MQTT 测试数据
+mqtt-test-data/
+
+# 上传的文件
+uploads/
+public/uploads/
+
+# 生成的静态文件
+static/generated/
+
+# 数据导出
+exports/
+*.csv.generated
+*.xlsx.generated
+

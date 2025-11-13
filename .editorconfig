@@ -1,0 +1,76 @@
+# EditorConfig 帮助开发者在不同的编辑器和 IDE 之间保持一致的编码风格
+# https://editorconfig.org
+
+# 顶级配置文件
+root = true
+
+# 所有文件的默认配置
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 2
+
+# Markdown 文件
+[*.md]
+trim_trailing_whitespace = false
+indent_size = 2
+
+# YAML 文件
+[*.{yml,yaml}]
+indent_size = 2
+
+# JSON 文件
+[*.json]
+indent_size = 2
+
+# JavaScript / TypeScript
+[*.{js,jsx,ts,tsx,vue}]
+indent_size = 2
+
+# CSS / SCSS / LESS
+[*.{css,scss,sass,less}]
+indent_size = 2
+
+# HTML
+[*.html]
+indent_size = 2
+
+# Shell 脚本
+[*.{sh,bash,zsh}]
+indent_size = 2
+end_of_line = lf
+
+# Makefile
+[Makefile]
+indent_style = tab
+indent_size = 4
+
+# Go 文件
+[*.go]
+indent_style = tab
+indent_size = 4
+
+# Python 文件
+[*.py]
+indent_size = 4
+
+# SQL 文件
+[*.sql]
+indent_size = 2
+
+# XML 文件
+[*.xml]
+indent_size = 2
+
+# 包管理器锁文件
+[{package-lock.json,pnpm-lock.yaml,yarn.lock}]
+insert_final_newline = false
+indent_size = 2
+
+# Prisma schema
+[*.prisma]
+indent_size = 2
+

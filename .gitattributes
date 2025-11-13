@@ -1,0 +1,118 @@
+# Git 属性配置文件
+# 用于规范化文件的行尾和其他属性
+
+# 自动检测文本文件并规范化行尾
+* text=auto
+
+# ==========================================
+# 源代码
+# ==========================================
+*.js text eol=lf
+*.jsx text eol=lf
+*.ts text eol=lf
+*.tsx text eol=lf
+*.vue text eol=lf
+*.json text eol=lf
+*.css text eol=lf
+*.scss text eol=lf
+*.sass text eol=lf
+*.less text eol=lf
+*.html text eol=lf
+*.xml text eol=lf
+*.svg text eol=lf
+*.md text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.toml text eol=lf
+
+# ==========================================
+# 配置文件
+# ==========================================
+*.conf text eol=lf
+*.config text eol=lf
+*.env text eol=lf
+.editorconfig text eol=lf
+.gitignore text eol=lf
+.gitattributes text eol=lf
+.dockerignore text eol=lf
+Dockerfile text eol=lf
+Makefile text eol=lf
+*.mk text eol=lf
+
+# ==========================================
+# Shell 脚本
+# ==========================================
+*.sh text eol=lf
+*.bash text eol=lf
+*.zsh text eol=lf
+
+# ==========================================
+# 文档
+# ==========================================
+*.txt text eol=lf
+*.doc diff=astextplain
+*.DOC diff=astextplain
+*.docx diff=astextplain
+*.DOCX diff=astextplain
+*.dot diff=astextplain
+*.DOT diff=astextplain
+*.pdf diff=astextplain
+*.PDF diff=astextplain
+*.rtf diff=astextplain
+*.RTF diff=astextplain
+
+# ==========================================
+# 二进制文件
+# ==========================================
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.webp binary
+*.woff binary
+*.woff2 binary
+*.eot binary
+*.ttf binary
+*.otf binary
+*.mp4 binary
+*.mp3 binary
+*.mov binary
+*.wav binary
+*.zip binary
+*.gz binary
+*.tar binary
+*.7z binary
+*.db binary
+*.sqlite binary
+*.sqlite3 binary
+
+# ==========================================
+# 锁文件 (避免合并冲突)
+# ==========================================
+package-lock.json -diff
+pnpm-lock.yaml -diff
+yarn.lock -diff
+
+# ==========================================
+# 生成的文件 (不需要 diff)
+# ==========================================
+*.min.js -diff
+*.min.css -diff
+*.bundle.js -diff
+*.bundle.css -diff
+
+# ==========================================
+# 语言统计 (Linguist)
+# ==========================================
+# 排除生成的文件和依赖
+/dist/** linguist-generated=true
+/build/** linguist-generated=true
+**/node_modules/** linguist-vendored
+package-lock.json linguist-generated=true
+pnpm-lock.yaml linguist-generated=true
+yarn.lock linguist-generated=true
+
+# 标记文档语言
+*.md linguist-documentation
+

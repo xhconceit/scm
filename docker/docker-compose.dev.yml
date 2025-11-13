@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  # PostgreSQL 数据库（开发环境）
+  postgres:
+    image: postgres:15-alpine
+    container_name: scm-postgres-dev
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: scm_dev
+      POSTGRES_USER: scmuser
+      POSTGRES_PASSWORD: scmpassword
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - scm-dev-network
+
+  # MQTT Broker（开发环境）
+  mqtt:
+    image: emqx/emqx:5.3.0
+    container_name: scm-mqtt-dev
+    restart: unless-stopped
+    environment:
+      - EMQX_NAME=scm-mqtt-dev
+      - EMQX_HOST=0.0.0.0
+    ports:
+      - "1883:1883"      # MQTT
+      - "8083:8083"      # MQTT over WebSocket
+      - "18083:18083"    # Dashboard (admin:public)
+    networks:
+      - scm-dev-network
+
+networks:
+  scm-dev-network:
+    driver: bridge
+
+volumes:
+  postgres_dev_data:
+    driver: local
+
