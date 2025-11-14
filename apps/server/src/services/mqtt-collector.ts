@@ -1,10 +1,15 @@
-import mqtt, { MqttClient } from "mqtt";
 import { createServer, Server as NetServer } from "net";
-import Aedes from "aedes";
+import Aedes, { Client } from "aedes";
 import { DataParser } from "./data-parser";
 import { MqttConfig } from "../types";
 import { config } from "../config/config";
 import logger from "../utils/logger";
+
+interface MqttMessage {
+  topic: string;
+  payload: string;
+  clientId: string;
+}
 
 /**
  * MQTT 数据采集器
@@ -17,6 +22,7 @@ export class MqttCollector {
   private netServer: NetServer | null = null;
   private readonly broker: Aedes;
   private readonly options: MqttConfig;
+  private readonly clients: Map<string, Client> = new Map();
 
   constructor(options: Partial<MqttConfig> = {}) {
     this.options = {
@@ -40,20 +46,34 @@ export class MqttCollector {
   private setupBroker(): void {
     // 监听客户端连接
     this.broker.on("client", (client) => {
+      if (client?.id) {
+        this.clients.set(client.id, client);
+      }
       logger.info("MQTT client connected", { id: client?.id });
     });
     // 监听客户端断开
     this.broker.on("clientDisconnect", (client) => {
       logger.info("MQTT client disconnected", { id: client?.id });
+      if (client?.id) {
+        this.clients.delete(client.id);
+      }
     });
     // 监听发布消息
     this.broker.on("publish", (packet, client) => {
-      if (client) {
-        logger.debug("Message published", {
-          topic: packet.topic,
-          clientId: client.id,
-        });
+      // 无 client 是系统消息
+      console.log(client?.id, "clientid");
+      if (!client || !client.id) return;
+      console.log(this.clients.has(client.id), "clients");
+      if (!this.clients.has(client.id)) {
+        logger.warn("Client not found", { clientId: client.id });
+        return;
       }
+
+      logger.warn("Message published", {
+        topic: packet.topic,
+        clientId: client.id,
+      });
+      logger.debug("Message payload", { payload: packet.payload.toString() });
     });
     // 监听订阅
     this.broker.on("subscribe", (subscriptions, client) => {
@@ -62,6 +82,7 @@ export class MqttCollector {
         clientId: client?.id,
       });
     });
+    // this.broker
   }
 
   /**
