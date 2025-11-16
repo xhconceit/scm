@@ -19,7 +19,7 @@ export const config = {
   },
   
   database: {
-    url: process.env.DATABASE_URL || 'postgresql://user:password@localhost:5432/scm',
+    url: process.env.DATABASE_URL || 'postgresql://scmuser:scmpassword@localhost:5432/scm',
   },
   
   logLevel: process.env.LOG_LEVEL || 'info',

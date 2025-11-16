@@ -1,30 +1,29 @@
 import { createServer, Server as NetServer } from "net";
 import Aedes, { Client } from "aedes";
-import { DataParser } from "./data-parser";
+import { EventEmitter } from "events";
 import { MqttConfig } from "../types";
 import { config } from "../config/config";
 import logger from "../utils/logger";
 
-interface MqttMessage {
+export interface MqttMessage {
   topic: string;
   payload: string;
   clientId: string;
 }
 
-/**
- * MQTT 数据采集器
- * - 启动内置 Aedes Broker（TCP + WebSocket）
- * - 可选连接外部 MQTT Broker 订阅数据
- * - 将消息解析并存储到数据库
- */
-export class MqttCollector {
-  // private readonly options: MqttCollectorOptions;
+interface MqttCollectorEvents {
+  message: [data: MqttMessage];
+  error: [error: Error];
+}
+
+export class MqttCollector extends EventEmitter<MqttCollectorEvents> {
   private netServer: NetServer | null = null;
   private readonly broker: Aedes;
   private readonly options: MqttConfig;
   private readonly clients: Map<string, Client> = new Map();
 
   constructor(options: Partial<MqttConfig> = {}) {
+    super();
     this.options = {
       broker: options.broker ?? config.mqtt.broker,
       port: options.port ?? config.mqtt.port,
@@ -49,11 +48,11 @@ export class MqttCollector {
       if (client?.id) {
         this.clients.set(client.id, client);
       }
-      logger.info("MQTT client connected", { id: client?.id });
+      logger.info("MQTT 客户端连接", { id: client?.id });
     });
     // 监听客户端断开
     this.broker.on("clientDisconnect", (client) => {
-      logger.info("MQTT client disconnected", { id: client?.id });
+      logger.info("MQTT 客户端断开", { id: client?.id });
       if (client?.id) {
         this.clients.delete(client.id);
       }
@@ -61,28 +60,31 @@ export class MqttCollector {
     // 监听发布消息
     this.broker.on("publish", (packet, client) => {
       // 无 client 是系统消息
-      console.log(client?.id, "clientid");
       if (!client || !client.id) return;
-      console.log(this.clients.has(client.id), "clients");
+      logger.info("MQTT 客户端发布消息ID：", { id: client?.id });
       if (!this.clients.has(client.id)) {
-        logger.warn("Client not found", { clientId: client.id });
+        logger.warn("MQTT 客户端未找到", { clientId: client.id });
         return;
       }
 
-      logger.warn("Message published", {
+      logger.info("MQTT 客户端发布消息，topic：", {
         topic: packet.topic,
         clientId: client.id,
       });
-      logger.debug("Message payload", { payload: packet.payload.toString() });
+
+      this.emit("message", {
+        topic: packet.topic,
+        payload: packet.payload,
+        clientId: client.id,
+      } as MqttMessage);
     });
     // 监听订阅
     this.broker.on("subscribe", (subscriptions, client) => {
-      logger.debug("Client subscribed", {
+      logger.debug("MQTT 客户端订阅", {
         subscriptions: subscriptions.map((s) => s.topic),
         clientId: client?.id,
       });
     });
-    // this.broker
   }
 
   /**
@@ -96,38 +98,41 @@ export class MqttCollector {
           this.broker.handle(stream);
         });
         this.netServer.listen(this.options.port, () => {
-          logger.info(`MQTT Broker started on port ${this.options.port}`);
+          logger.info(`MQTT Broker 启动成功，端口 ${this.options.port}`);
         });
         resolve();
       } catch (error) {
-        logger.error("Failed to start MQTT broker", error);
+        logger.error("MQTT Broker 启动失败", error);
         reject(error);
       }
     });
   }
 
-  /**
-   * 连接到外部 MQTT Broker（用于订阅其他来源的数据）
-   */
-  async connectToBroker(): Promise<void> {}
+  getClients(): string[] {
+    return Array.from(this.clients.keys());
+  }
 
   /**
-   * 订阅所有设备主题（sugarcane harvester/+/realtime）
+   * 关闭 Broker，释放资源
    */
-  private subscribeToAllDevices(): void {}
+  disconnect(): void {
+    // 关闭所有客户端连接
+    this.clients.forEach((client) => {
+      client.close();
+    });
+    this.clients.clear();
 
-  /**
-   * 订阅特定设备的实时数据
-   */
-  subscribeDevice(deviceId: number): void {}
+    // 关闭服务器
+    if (this.netServer) {
+      this.netServer.close(() => {
+        logger.info("MQTT Broker 关闭");
+      });
+      this.netServer = null;
+    }
 
-  /**
-   * 处理接收到的 MQTT 消息：解析 -> 校验 -> 持久化
-   */
-  private async handleMessage(topic: string, payload: Buffer): Promise<void> {}
-
-  /**
-   * 清理所有连接，释放资源
-   */
-  disconnect(): void {}
+    // 关闭 Broker
+    this.broker.close(() => {
+      logger.info("Aedes Broker 关闭");
+    });
+  }
 }

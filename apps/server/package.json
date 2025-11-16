@@ -40,5 +40,14 @@
     "@types/jest": "^29.5.8",
     "supertest": "^6.3.3",
     "@types/supertest": "^6.0.2"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@prisma/client",
+      "@prisma/engines",
+      "esbuild",
+      "prisma",
+      "vue-demi"
+    ]
   }
 }

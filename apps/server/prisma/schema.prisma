@@ -8,51 +8,12 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// 设备表
-model Device {
-  id          Int      @id @default(autoincrement())
-  deviceId    Int      @unique @map("device_id")
-  name        String
-  status      String   @default("offline") // online, offline
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
-  
-  // 关联关系
-  realtimeData RealtimeData[]
-  historyData  HistoryData[]
-  
-  @@map("devices")
-}
-
-// 实时数据表
-model RealtimeData {
-  id        Int      @id @default(autoincrement())
-  deviceId  Int      @map("device_id")
-  type      Int      // 1 或 2
-  module    Json     // [0, 0, 0, ...] 18个元素
-  createdAt DateTime @default(now()) @map("created_at")
-  
-  // 关联关系
-  device    Device   @relation(fields: [deviceId], references: [deviceId], onDelete: Cascade)
-  
-  @@index([deviceId])
-  @@index([createdAt])
-  @@map("realtime_data")
-}
-
-// 历史数据表（用于存储聚合数据）
-model HistoryData {
-  id        Int      @id @default(autoincrement())
-  deviceId  Int      @map("device_id")
-  type      Int
-  module    Json
-  timestamp DateTime @map("timestamp")
-  createdAt DateTime @default(now()) @map("created_at")
-  
-  // 关联关系
-  device    Device   @relation(fields: [deviceId], references: [deviceId], onDelete: Cascade)
-  
-  @@index([deviceId])
-  @@index([timestamp])
-  @@map("history_data")
+model Data {
+  id        String   @id @default(uuid()) // id
+  clientId  String // 客户端ID
+  topic     String // 主题
+  type      Int      // 类型
+  module    Json     // 模块数据
+  createdAt DateTime @default(now()) // 创建时间
+  updatedAt DateTime @updatedAt // 更新时间
 }

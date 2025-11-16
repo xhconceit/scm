@@ -1,11 +1,12 @@
-import Koa from 'koa';
-import Router from '@koa/router';
-import cors from '@koa/cors';
-import bodyParser from 'koa-bodyparser';
-import { config } from './config/config';
-import logger from './utils/logger';
-import deviceRoutes from './api/routes/devices';
-import { MqttCollector } from './services/mqtt-collector';
+import Koa from "koa";
+import Router from "@koa/router";
+import cors from "@koa/cors";
+import bodyParser from "koa-bodyparser";
+import { config } from "./config/config";
+import logger from "./utils/logger";
+import { MqttCollector } from "./services/mqtt-collector";
+import { Storage } from "./services/storage";
+import { RealtimeMessage } from "./types";
 
 const app = new Koa();
 const router = new Router();
@@ -15,19 +16,16 @@ app.use(cors());
 app.use(bodyParser());
 
 // 健康检查端点，便于 K8s / Docker Compose 做存活检测
-router.get('/health', async (ctx) => {
-  ctx.body = { status: 'ok', timestamp: new Date().toISOString() };
+router.get("/health", async (ctx) => {
+  ctx.body = { status: "ok", timestamp: new Date().toISOString() };
 });
-
-// RESTful API 路由，与 README 中的接口列表保持一致
-router.use('/api', deviceRoutes.routes());
 
 app.use(router.routes());
 app.use(router.allowedMethods());
 
 // 全局错误日志，统一输出到 Winston
-app.on('error', (err, ctx) => {
-  logger.error('Application error', { error: err, path: ctx.path });
+app.on("error", (err, ctx) => {
+  logger.error("Application error", { error: err, path: ctx.path });
 });
 
 /**
@@ -42,19 +40,27 @@ async function startServer() {
     const mqttCollector = new MqttCollector();
     await mqttCollector.startBroker();
 
-    // 如果配置了外部 Broker，连接到外部 Broker
-    if (config.mqtt.broker && config.mqtt.broker !== 'mqtt://localhost') {
-      await mqttCollector.connectToBroker();
-    }
+    mqttCollector.on("message",  async (message) => {
+      // message.topic
+      logger.info("MQTT 消息接收", message);
+      try {
+        const realtimeMessage: RealtimeMessage = JSON.parse(message.payload);
+        await Storage.saveData(message.clientId, message.topic, realtimeMessage);
+        logger.info("MQTT 消息存储成功", realtimeMessage);
+      } catch (error) {
+        logger.error("MQTT 消息解析失败", error);
+        logger.error("MQTT 消息内容", message.payload);
+      }
+    });
 
     // 启动 HTTP 服务器
     app.listen(config.port, () => {
-      logger.info(`Server started on port ${config.port}`);
-      logger.info(`Health check: http://localhost:${config.port}/health`);
+      logger.info(`服务器端口 ${config.port}`);
+      logger.info(`健康检查: http://localhost:${config.port}/health`);
       logger.info(`API: http://localhost:${config.port}/api`);
     });
   } catch (error) {
-    logger.error('Failed to start server', error);
+    logger.error("启动服务器失败", error);
     process.exit(1);
   }
 }

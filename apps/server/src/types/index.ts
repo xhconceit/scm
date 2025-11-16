@@ -6,7 +6,7 @@ export interface RealtimeMessage {
   /**
    * 数据类型标识，目前只接受 1 或 2
    */
-  type: 1 | 2;
+  type: number;
   /**
    * 模块数据，固定 18 个整型数值
    */
