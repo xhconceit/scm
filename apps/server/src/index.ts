@@ -5,7 +5,7 @@ import bodyParser from "koa-bodyparser";
 import { config } from "./config/config";
 import logger from "./utils/logger";
 import { MqttCollector } from "./services/mqtt-collector";
-import { Storage } from "./services/storage";
+import { SensorData } from "./services/sensor-data";
 import { RealtimeMessage } from "./types";
 
 const app = new Koa();
@@ -40,12 +40,12 @@ async function startServer() {
     const mqttCollector = new MqttCollector();
     await mqttCollector.startBroker();
 
-    mqttCollector.on("message",  async (message) => {
+    mqttCollector.on("message", async (message) => {
       // message.topic
       logger.info("MQTT 消息接收", message);
       try {
         const realtimeMessage: RealtimeMessage = JSON.parse(message.payload);
-        await Storage.saveData(message.clientId, message.topic, realtimeMessage);
+        await SensorData.save(message.clientId, message.topic, realtimeMessage);
         logger.info("MQTT 消息存储成功", realtimeMessage);
       } catch (error) {
         logger.error("MQTT 消息解析失败", error);

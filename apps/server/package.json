@@ -12,7 +12,9 @@
     "test:coverage": "jest --coverage",
     "lint": "eslint src --ext .ts",
     "lint:fix": "eslint src --ext .ts --fix",
-    "clean": "rm -rf dist node_modules"
+    "clean": "rm -rf dist node_modules",
+    "postinstall": "prisma generate",
+    "prisma:db": "prisma db push"
   },
   "dependencies": {
     "koa": "^2.14.2",

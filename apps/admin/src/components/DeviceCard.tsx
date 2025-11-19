@@ -1,5 +1,5 @@
 import { defineComponent, PropType } from 'vue';
-import { ElCard, ElTag } from 'element-plus';
+import { NCard, NTag } from 'naive-ui';
 import { Device } from '../types';
 import './DeviceCard.css';
 
@@ -21,19 +21,19 @@ export default defineComponent({
     };
 
     return () => (
-      <ElCard class="device-card" onClick={handleClick}>
-        <div class="card-content">
+      <NCard class="device-card" hoverable style={{ cursor: 'pointer' }}>
+        <div class="card-content" onClick={handleClick}>
           <div class="device-info">
             <h3>{props.device.name}</h3>
             <p>设备ID: {props.device.deviceId}</p>
           </div>
           <div class="device-status">
-            <ElTag type={props.device.status === 'online' ? 'success' : 'info'}>
+            <NTag type={props.device.status === 'online' ? 'success' : 'default'}>
               {props.device.status === 'online' ? '在线' : '离线'}
-            </ElTag>
+            </NTag>
           </div>
         </div>
-      </ElCard>
+      </NCard>
     );
   },
 });

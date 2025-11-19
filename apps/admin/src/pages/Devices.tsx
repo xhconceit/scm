@@ -2,25 +2,22 @@ import {
   defineComponent,
   onMounted,
   ref,
-  resolveDirective,
-  withDirectives,
+  h,
 } from 'vue';
 import { useRouter } from 'vue-router';
 import {
-  ElButton,
-  ElCol,
-  ElDialog,
-  ElForm,
-  ElFormItem,
-  ElInput,
-  ElInputNumber,
-  ElMessage,
-  ElMessageBox,
-  ElRow,
-  ElTable,
-  ElTableColumn,
-  ElTag,
-} from 'element-plus';
+  NButton,
+  NDataTable,
+  NModal,
+  NForm,
+  NFormItem,
+  NInput,
+  NInputNumber,
+  NTag,
+  NSpace,
+} from 'naive-ui';
+import type { DataTableColumns } from 'naive-ui';
+import { message, dialog } from '../utils/naive';
 import { useDeviceStore } from '../stores/device';
 import type { Device } from '../types';
 import './Devices.css';
@@ -39,16 +36,12 @@ export default defineComponent({
       deviceStore.fetchDevices();
     });
 
-    const closeDialog = (value: boolean) => {
-      showCreateDialog.value = value;
-    };
-
     /**
      * 提交创建设备表单，成功后刷新列表并重置输入
      */
     const handleCreate = async () => {
       if (!newDevice.value.name.trim()) {
-        ElMessage.warning('请输入设备名称');
+        message.warning('请输入设备名称');
         return;
       }
       const success = await deviceStore.createDevice({
@@ -56,11 +49,11 @@ export default defineComponent({
         name: newDevice.value.name,
       });
       if (success) {
-        ElMessage.success('设备创建成功');
+        message.success('设备创建成功');
         showCreateDialog.value = false;
         newDevice.value = { deviceId: 1001, name: '' };
       } else {
-        ElMessage.error('设备创建失败');
+        message.error('设备创建失败');
       }
     };
 
@@ -75,130 +68,122 @@ export default defineComponent({
      * 删除设备前弹窗确认，避免误操作
      */
     const handleDelete = async (deviceId: number) => {
-      try {
-        await ElMessageBox.confirm('确定要删除该设备吗？', '提示', {
-          type: 'warning',
-        });
-        const success = await deviceStore.deleteDevice(deviceId);
-        if (success) {
-          ElMessage.success('设备删除成功');
-        } else {
-          ElMessage.error('设备删除失败');
+      dialog.warning({
+        title: '提示',
+        content: '确定要删除该设备吗？',
+        positiveText: '确定',
+        negativeText: '取消',
+        onPositiveClick: async () => {
+          const success = await deviceStore.deleteDevice(deviceId);
+          if (success) {
+            message.success('设备删除成功');
+          } else {
+            message.error('设备删除失败');
+          }
         }
-      } catch {
-        // 用户取消操作时不做处理
-      }
+      });
     };
 
-    return () => {
-      const loadingDirective = resolveDirective('loading');
-      let tableVNode = (
-        <ElTable data={deviceStore.devices} stripe class="device-table">
-          <ElTableColumn prop="deviceId" label="设备ID" width={120} />
-          <ElTableColumn prop="name" label="设备名称" />
-          <ElTableColumn
-            prop="status"
-            label="状态"
-            width={100}
-            v-slots={{
-              default: ({ row }: { row: Device }) => (
-                <ElTag type={row.status === 'online' ? 'success' : 'info'}>
-                  {row.status === 'online' ? '在线' : '离线'}
-                </ElTag>
-              ),
-            }}
-          />
-          <ElTableColumn
-            prop="createdAt"
-            label="创建时间"
-            width={180}
-            v-slots={{
-              default: ({ row }: { row: Device }) => new Date(row.createdAt).toLocaleString(),
-            }}
-          />
-          <ElTableColumn
-            label="操作"
-            width={200}
-            v-slots={{
-              default: ({ row }: { row: Device }) => (
-                <>
-                  <ElButton size="small" onClick={() => handleView(row.deviceId)}>
-                    查看
-                  </ElButton>
-                  <ElButton
-                    size="small"
-                    type="danger"
-                    onClick={() => handleDelete(row.deviceId)}
-                  >
-                    删除
-                  </ElButton>
-                </>
-              ),
-            }}
-          />
-        </ElTable>
-      );
+    const columns: DataTableColumns<Device> = [
+      {
+        title: '设备ID',
+        key: 'deviceId',
+        width: 120,
+      },
+      {
+        title: '设备名称',
+        key: 'name',
+      },
+      {
+        title: '状态',
+        key: 'status',
+        width: 100,
+        render: (row) =>
+          h(
+            NTag,
+            { type: row.status === 'online' ? 'success' : 'default' },
+            { default: () => (row.status === 'online' ? '在线' : '离线') }
+          ),
+      },
+      {
+        title: '创建时间',
+        key: 'createdAt',
+        width: 180,
+        render: (row) => new Date(row.createdAt).toLocaleString(),
+      },
+      {
+        title: '操作',
+        key: 'actions',
+        width: 200,
+        render: (row) =>
+          h(
+            NSpace,
+            {},
+            {
+              default: () => [
+                h(
+                  NButton,
+                  { size: 'small', onClick: () => handleView(row.deviceId) },
+                  { default: () => '查看' }
+                ),
+                h(
+                  NButton,
+                  { size: 'small', type: 'error', onClick: () => handleDelete(row.deviceId) },
+                  { default: () => '删除' }
+                ),
+              ],
+            }
+          ),
+      },
+    ];
 
-      if (loadingDirective) {
-        tableVNode = withDirectives(tableVNode, [[loadingDirective, deviceStore.loading]]);
-      }
-
-      return (
-        <div class="devices">
-          <ElRow gutter={20}>
-            <ElCol span={24}>
-              <div class="page-header">
-                <h2>设备管理</h2>
-                <ElButton type="primary" onClick={() => (showCreateDialog.value = true)}>
-                  添加设备
-                </ElButton>
-              </div>
-            </ElCol>
-          </ElRow>
-
-          <ElRow gutter={20} style={{ marginTop: '20px' }}>
-            <ElCol span={24}>{tableVNode}</ElCol>
-          </ElRow>
-
-          <ElDialog
-            modelValue={showCreateDialog.value}
-            title="添加设备"
-            width="500px"
-            onUpdate:modelValue={closeDialog}
-            v-slots={{
-              footer: () => (
-                <>
-                  <ElButton onClick={() => (showCreateDialog.value = false)}>取消</ElButton>
-                  <ElButton type="primary" onClick={handleCreate}>
-                    确定
-                  </ElButton>
-                </>
-              ),
-            }}
-          >
-            <ElForm model={newDevice.value} labelWidth="100px">
-              <ElFormItem label="设备ID">
-                <ElInputNumber
-                  min={1}
-                  valueOnClear={1001}
-                  modelValue={newDevice.value.deviceId}
-                  onUpdate:modelValue={(value) => {
-                    newDevice.value.deviceId = typeof value === 'number' ? value : 1001;
-                  }}
-                />
-              </ElFormItem>
-              <ElFormItem label="设备名称">
-                <ElInput
-                  modelValue={newDevice.value.name}
-                  onUpdate:modelValue={(value) => {
-                    newDevice.value.name = value ?? '';
-                  }}
-                />
-              </ElFormItem>
-            </ElForm>
-          </ElDialog>
+    return () => (
+      <div class="devices">
+        <div class="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+          <h2>设备管理</h2>
+          <NButton type="primary" onClick={() => (showCreateDialog.value = true)}>
+            添加设备
+          </NButton>
         </div>
-      );
-    };
+
+        <NDataTable
+          columns={columns}
+          data={deviceStore.devices}
+          loading={deviceStore.loading}
+          striped
+        />
+
+        <NModal
+          v-model:show={showCreateDialog.value}
+          title="添加设备"
+          preset="dialog"
+          positiveText="确定"
+          negativeText="取消"
+          onPositiveClick={handleCreate}
+          onNegativeClick={() => (showCreateDialog.value = false)}
+        >
+          <NForm model={newDevice.value} labelPlacement="left" labelWidth={100}>
+            <NFormItem label="设备ID">
+              <NInputNumber
+                min={1}
+                value={newDevice.value.deviceId}
+                onUpdateValue={(value) => {
+                  newDevice.value.deviceId = typeof value === 'number' ? value : 1001;
+                }}
+                style={{ width: '100%' }}
+              />
+            </NFormItem>
+            <NFormItem label="设备名称">
+              <NInput
+                value={newDevice.value.name}
+                onUpdateValue={(value) => {
+                  newDevice.value.name = value ?? '';
+                }}
+              />
+            </NFormItem>
+          </NForm>
+        </NModal>
+      </div>
+    );
   },
 });

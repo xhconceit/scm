@@ -8,12 +8,21 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Data {
+model SensorData {
   id        String   @id @default(uuid()) // id
   clientId  String // 客户端ID
   topic     String // 主题
-  type      Int      // 类型
-  module    Json     // 模块数据
+  type      Int // 类型
+  module    Json // 模块数据
+  createdAt DateTime @default(now()) // 创建时间
+  updatedAt DateTime @updatedAt // 更新时间
+}
+
+model SensorDataConfig {
+  id        String   @id @default(uuid()) // id
+  type      Int // 类型
+  name      String // 名称
+  config    Json // 配置
   createdAt DateTime @default(now()) // 创建时间
   updatedAt DateTime @updatedAt // 更新时间
 }

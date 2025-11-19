@@ -1,12 +1,10 @@
 import { defineComponent, ref } from 'vue';
 import {
-  ElCard,
-  ElCol,
-  ElDescriptions,
-  ElDescriptionsItem,
-  ElRow,
-  ElTag,
-} from 'element-plus';
+  NCard,
+  NDescriptions,
+  NTag,
+  NSpace,
+} from 'naive-ui';
 
 export default defineComponent({
   name: 'SettingsPage',
@@ -19,40 +17,42 @@ export default defineComponent({
 
     return () => (
       <div class="settings">
-        <ElRow gutter={20}>
-          <ElCol span={24}>
-            <h2>系统设置</h2>
-          </ElCol>
-        </ElRow>
+        <h2>系统设置</h2>
 
-        <ElRow gutter={20} style={{ marginTop: '20px' }}>
-          <ElCol span={24}>
-            <ElCard v-slots={{ header: () => <span>MQTT 配置</span> }}>
-              <ElDescriptions column={1} border>
-                <ElDescriptionsItem label="Broker 地址">
-                  {mqttConfig.value.broker}
-                </ElDescriptionsItem>
-                <ElDescriptionsItem label="端口">{mqttConfig.value.port}</ElDescriptionsItem>
-                <ElDescriptionsItem label="状态">
-                  <ElTag type="success">已连接</ElTag>
-                </ElDescriptionsItem>
-              </ElDescriptions>
-            </ElCard>
-          </ElCol>
-        </ElRow>
+        <NSpace vertical size="large" style={{ marginTop: '20px' }}>
+          <NCard title="MQTT 配置">
+            <NDescriptions column={1} bordered>
+              {{
+                default: () => [
+                  <NDescriptions.DescriptionsItem label="Broker 地址">
+                    {mqttConfig.value.broker}
+                  </NDescriptions.DescriptionsItem>,
+                  <NDescriptions.DescriptionsItem label="端口">
+                    {mqttConfig.value.port}
+                  </NDescriptions.DescriptionsItem>,
+                  <NDescriptions.DescriptionsItem label="状态">
+                    <NTag type="success">已连接</NTag>
+                  </NDescriptions.DescriptionsItem>,
+                ],
+              }}
+            </NDescriptions>
+          </NCard>
 
-        <ElRow gutter={20} style={{ marginTop: '20px' }}>
-          <ElCol span={24}>
-            <ElCard v-slots={{ header: () => <span>数据库配置</span> }}>
-              <ElDescriptions column={1} border>
-                <ElDescriptionsItem label="数据库类型">PostgreSQL</ElDescriptionsItem>
-                <ElDescriptionsItem label="状态">
-                  <ElTag type="success">已连接</ElTag>
-                </ElDescriptionsItem>
-              </ElDescriptions>
-            </ElCard>
-          </ElCol>
-        </ElRow>
+          <NCard title="数据库配置">
+            <NDescriptions column={1} bordered>
+              {{
+                default: () => [
+                  <NDescriptions.DescriptionsItem label="数据库类型">
+                    PostgreSQL
+                  </NDescriptions.DescriptionsItem>,
+                  <NDescriptions.DescriptionsItem label="状态">
+                    <NTag type="success">已连接</NTag>
+                  </NDescriptions.DescriptionsItem>,
+                ],
+              }}
+            </NDescriptions>
+          </NCard>
+        </NSpace>
       </div>
     );
   },

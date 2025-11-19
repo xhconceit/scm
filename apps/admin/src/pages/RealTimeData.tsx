@@ -1,15 +1,13 @@
 import { defineComponent, onMounted, onUnmounted, ref } from 'vue';
 import {
-  ElButton,
-  ElCard,
-  ElCol,
-  ElDescriptions,
-  ElDescriptionsItem,
-  ElEmpty,
-  ElOption,
-  ElRow,
-  ElSelect,
-} from 'element-plus';
+  NButton,
+  NCard,
+  NDescriptions,
+  NEmpty,
+  NSelect,
+  NSpace,
+} from 'naive-ui';
+import type { SelectOption } from 'naive-ui';
 import ModuleStatus from '../components/ModuleStatus';
 import { useDeviceStore } from '../stores/device';
 import './RealTimeData.css';
@@ -20,11 +18,22 @@ export default defineComponent({
     const deviceStore = useDeviceStore();
     const selectedDeviceId = ref<number | null>(null);
     const polling = ref(false);
-    let pollingTimer: ReturnType<typeof setInterval> | null = null;
+    const deviceOptions = ref<SelectOption[]>([]);
+    let pollingTimer: number | null = null;
+
+    // 将设备列表转换为选择器选项
+    const updateDeviceOptions = () => {
+      deviceOptions.value = deviceStore.devices.map((device) => ({
+        label: device.name,
+        value: device.deviceId,
+      }));
+    };
 
     onMounted(() => {
       // 页面加载时即获取设备清单，方便用户直接选择
-      deviceStore.fetchDevices();
+      deviceStore.fetchDevices().then(() => {
+        updateDeviceOptions();
+      });
     });
 
     onUnmounted(() => {
@@ -54,74 +63,63 @@ export default defineComponent({
 
     const stopPolling = () => {
       polling.value = false;
-      if (pollingTimer) {
-        clearInterval(pollingTimer);
+      if (pollingTimer !== null) {
+        window.clearInterval(pollingTimer);
         pollingTimer = null;
       }
     };
 
     return () => (
       <div class="realtime-data">
-        <ElRow gutter={20}>
-          <ElCol span={24}>
-            <h2>实时数据监控</h2>
-          </ElCol>
-        </ElRow>
+        <h2>实时数据监控</h2>
 
-        <ElRow gutter={20} style={{ marginTop: '20px' }}>
-          <ElCol span={24}>
-            <ElCard
-              v-slots={{
-                header: () => (
-                  <div class="card-header">
-                    <span>选择设备</span>
-                    <ElSelect
-                      placeholder="请选择设备"
-                      modelValue={selectedDeviceId.value}
-                      style={{ width: '200px' }}
-                      onUpdate:modelValue={(value) => {
-                        selectedDeviceId.value = typeof value === 'number' ? value : null;
-                      }}
-                    >
-                      {deviceStore.devices.map((device) => (
-                        <ElOption
-                          key={device.id}
-                          label={device.name}
-                          value={device.deviceId}
-                        />
-                      ))}
-                    </ElSelect>
-                    <ElButton type="primary" onClick={startPolling} disabled={polling.value}>
-                      开始监控
-                    </ElButton>
-                    <ElButton onClick={stopPolling} disabled={!polling.value}>
-                      停止监控
-                    </ElButton>
-                  </div>
-                ),
-              }}
-            >
-              {deviceStore.realtimeData ? (
+        <NCard style={{ marginTop: '20px' }}>
+          {{
+            header: () => (
+              <NSpace align="center">
+                <span>选择设备</span>
+                <NSelect
+                  placeholder="请选择设备"
+                  value={selectedDeviceId.value}
+                  options={deviceOptions.value}
+                  style={{ width: '200px' }}
+                  onUpdateValue={(value) => {
+                    selectedDeviceId.value = typeof value === 'number' ? value : null;
+                  }}
+                />
+                <NButton type="primary" onClick={startPolling} disabled={polling.value}>
+                  开始监控
+                </NButton>
+                <NButton onClick={stopPolling} disabled={!polling.value}>
+                  停止监控
+                </NButton>
+              </NSpace>
+            ),
+            default: () =>
+              deviceStore.realtimeData ? (
                 <div class="data-content">
-                  <ElDescriptions column={2} border>
-                    <ElDescriptionsItem label="数据类型">
-                      {deviceStore.realtimeData.type === 1 ? '类型一' : '类型二'}
-                    </ElDescriptionsItem>
-                    <ElDescriptionsItem label="更新时间">
-                      {new Date().toLocaleString()}
-                    </ElDescriptionsItem>
-                  </ElDescriptions>
+                  <NDescriptions column={2} bordered>
+                    {{
+                      default: () => [
+                        <NDescriptions.DescriptionsItem label="数据类型">
+                          {deviceStore.realtimeData?.type === 1 ? '类型一' : '类型二'}
+                        </NDescriptions.DescriptionsItem>,
+                        <NDescriptions.DescriptionsItem label="更新时间">
+                          {new Date().toLocaleString()}
+                        </NDescriptions.DescriptionsItem>,
+                      ],
+                    }}
+                  </NDescriptions>
                   <div style={{ marginTop: '20px' }}>
                     <h3>模块数据</h3>
                     <ModuleStatus modules={deviceStore.realtimeData.module} />
                   </div>
                 </div>
               ) : (
-                <ElEmpty description="请选择设备并开始监控" />
-              )}
-            </ElCard>
-          </ElCol>
-        </ElRow>
+                <NEmpty description="请选择设备并开始监控" />
+              ),
+          }}
+        </NCard>
       </div>
     );
   },
