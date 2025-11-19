@@ -1,18 +1,24 @@
-import { computed, defineComponent } from 'vue';
-import { RouterView, useRoute, useRouter } from 'vue-router';
-import { NLayout, NLayoutHeader, NLayoutContent, NMenu, NSpace, NConfigProvider } from 'naive-ui';
-import type { MenuOption } from 'naive-ui';
-import './App.css';
+import { computed, defineComponent } from "vue";
+import { RouterView, useRoute, useRouter } from "vue-router";
+import {
+  NLayout,
+  NLayoutHeader,
+  NLayoutContent,
+  NMenu,
+  NSpace,
+  NConfigProvider,
+} from "naive-ui";
+import type { MenuOption } from "naive-ui";
+import "./App.css";
 
 const NAV_ITEMS = [
-  { label: '仪表盘', path: '/dashboard', key: '/dashboard' },
-  { label: '设备管理', path: '/devices', key: '/devices' },
-  { label: '实时数据', path: '/realtime', key: '/realtime' },
-  { label: '系统设置', path: '/settings', key: '/settings' },
+  { label: "仪表盘", path: "/dashboard", key: "/dashboard" },
+  { label: "实时数据", path: "/realtime", key: "/realtime" },
+  { label: "系统设置", path: "/settings", key: "/settings" },
 ] as const;
 
 export default defineComponent({
-  name: 'App',
+  name: "App",
   setup() {
     const route = useRoute();
     const router = useRouter();
@@ -35,10 +41,22 @@ export default defineComponent({
 
     return () => (
       <NConfigProvider>
-        <NLayout class="app-container" style={{ minHeight: '100vh' }}>
-          <NLayoutHeader class="app-header" style={{ padding: '0 24px', height: '64px', display: 'flex', alignItems: 'center' }}>
-            <NSpace justify="space-between" align="center" style={{ width: '100%' }}>
-              <h1 class="app-title" style={{ margin: 0, fontSize: '20px' }}>
+        <NLayout class="app-container" style={{ minHeight: "100vh" }}>
+          <NLayoutHeader
+            class="app-header"
+            style={{
+              padding: "0 24px",
+              height: "64px",
+              display: "flex",
+              alignItems: "center",
+            }}
+          >
+            <NSpace
+              justify="space-between"
+              align="center"
+              style={{ width: "100%" }}
+            >
+              <h1 class="app-title" style={{ margin: 0, fontSize: "20px" }}>
                 SCM - 甘蔗收割机数据采集系统
               </h1>
               <NMenu
@@ -49,7 +67,7 @@ export default defineComponent({
               />
             </NSpace>
           </NLayoutHeader>
-          <NLayoutContent class="app-main" style={{ padding: '24px' }}>
+          <NLayoutContent class="app-main" style={{ padding: "24px" }}>
             {/* RouterView 渲染当前路由对应的页面组件 */}
             <RouterView />
           </NLayoutContent>

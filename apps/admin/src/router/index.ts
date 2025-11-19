@@ -1,6 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import Dashboard from '../pages/Dashboard';
-import Devices from '../pages/Devices';
 import RealTimeData from '../pages/RealTimeData';
 import Settings from '../pages/Settings';
 
@@ -15,11 +14,6 @@ const router = createRouter({
       path: '/dashboard',
       name: 'Dashboard',
       component: Dashboard,
-    },
-    {
-      path: '/devices',
-      name: 'Devices',
-      component: Devices,
     },
     {
       path: '/realtime',
