@@ -1,54 +1,79 @@
-import { defineComponent, onBeforeUnmount, onMounted, PropType, ref, watch } from 'vue';
-import * as echarts from 'echarts';
-import './DataChart.css';
+import {
+  defineComponent,
+  onBeforeUnmount,
+  onMounted,
+  PropType,
+  ref,
+  watch,
+} from "vue";
+import * as echarts from "echarts";
+import "./DataChart.css";
+
+export interface ChartSeries {
+  name: string;
+  data: number[];
+}
 
 export default defineComponent({
-  name: 'DataChart',
+  name: "DataChart",
   props: {
-    data: {
-      type: Array as PropType<number[]>,
+    series: {
+      type: Array as PropType<ChartSeries[]>,
       required: true,
+    },
+    xAxisData: {
+      type: Array as PropType<string[]>,
+      default: () => [],
     },
     title: {
       type: String,
-      default: '模块数据',
+      default: "数据趋势",
     },
   },
   setup(props) {
     const chartContainer = ref<HTMLDivElement | null>(null);
     let chartInstance: echarts.ECharts | null = null;
 
-    // 将最新的数据集映射为折线图配置并渲染到图表实例上
     const updateChart = () => {
-      if (!chartInstance || !props.data?.length) {
+      if (!chartInstance || !props.series?.length) {
         return;
       }
 
       const option: echarts.EChartsOption = {
         title: {
           text: props.title,
-          left: 'center',
+          left: "center",
         },
         tooltip: {
-          trigger: 'axis',
+          trigger: "axis",
+        },
+        legend: {
+          data: props.series.map((s) => s.name),
+          bottom: 0,
+        },
+        grid: {
+          left: "3%",
+          right: "4%",
+          bottom: "10%", // 留出图例空间
+          containLabel: true,
         },
         xAxis: {
-          type: 'category',
-          data: props.data.map((_, index) => `模块 ${index + 1}`),
+          type: "category",
+          boundaryGap: false,
+          data: props.xAxisData,
         },
         yAxis: {
-          type: 'value',
+          type: "value",
         },
-        series: [
-          {
-            data: props.data,
-            type: 'line',
-            smooth: true,
-          },
-        ],
+        series: props.series.map((s) => ({
+          name: s.name,
+          type: "line",
+          data: s.data,
+          smooth: true,
+        })),
       };
 
-      chartInstance.setOption(option);
+      chartInstance.setOption(option, true); // true to merge = false (replace)
     };
 
     onMounted(() => {
@@ -57,18 +82,21 @@ export default defineComponent({
       }
       chartInstance = echarts.init(chartContainer.value);
       updateChart();
+
+      // 添加 resize 监听
+      window.addEventListener("resize", () => chartInstance?.resize());
     });
 
     watch(
-      () => props.data,
+      [() => props.series, () => props.xAxisData],
       () => {
-        // 监听数据变化后刷新图表，保持展示与后台数据同步
         updateChart();
       },
       { deep: true }
     );
 
     onBeforeUnmount(() => {
+      window.removeEventListener("resize", () => chartInstance?.resize());
       chartInstance?.dispose();
       chartInstance = null;
     });

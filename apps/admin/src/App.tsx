@@ -7,6 +7,7 @@ import {
   NMenu,
   NSpace,
   NConfigProvider,
+  NMessageProvider,
 } from "naive-ui";
 import type { MenuOption } from "naive-ui";
 import "./App.css";
@@ -41,37 +42,39 @@ export default defineComponent({
 
     return () => (
       <NConfigProvider>
-        <NLayout class="app-container" style={{ minHeight: "100vh" }}>
-          <NLayoutHeader
-            class="app-header"
-            style={{
-              padding: "0 24px",
-              height: "64px",
-              display: "flex",
-              alignItems: "center",
-            }}
-          >
-            <NSpace
-              justify="space-between"
-              align="center"
-              style={{ width: "100%" }}
+        <NMessageProvider>
+          <NLayout class="app-container" style={{ minHeight: "100vh" }}>
+            <NLayoutHeader
+              class="app-header"
+              style={{
+                padding: "0 24px",
+                height: "64px",
+                display: "flex",
+                alignItems: "center",
+              }}
             >
-              <h1 class="app-title" style={{ margin: 0, fontSize: "20px" }}>
-                SCM - 甘蔗收割机数据采集系统
-              </h1>
-              <NMenu
-                mode="horizontal"
-                value={activeMenu.value}
-                options={menuOptions.value}
-                onUpdateValue={handleMenuUpdate}
-              />
-            </NSpace>
-          </NLayoutHeader>
-          <NLayoutContent class="app-main" style={{ padding: "24px" }}>
-            {/* RouterView 渲染当前路由对应的页面组件 */}
-            <RouterView />
-          </NLayoutContent>
-        </NLayout>
+              <NSpace
+                justify="space-between"
+                align="center"
+                style={{ width: "100%" }}
+              >
+                <h1 class="app-title" style={{ margin: 0, fontSize: "20px" }}>
+                  SCM - 甘蔗收割机数据采集系统
+                </h1>
+                <NMenu
+                  mode="horizontal"
+                  value={activeMenu.value}
+                  options={menuOptions.value}
+                  onUpdateValue={handleMenuUpdate}
+                />
+              </NSpace>
+            </NLayoutHeader>
+            <NLayoutContent class="app-main" style={{ padding: "24px" }}>
+              {/* RouterView 渲染当前路由对应的页面组件 */}
+              <RouterView />
+            </NLayoutContent>
+          </NLayout>
+        </NMessageProvider>
       </NConfigProvider>
     );
   },
