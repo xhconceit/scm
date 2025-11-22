@@ -10,6 +10,7 @@ import {
   useMessage,
   NPopconfirm,
 } from "naive-ui";
+import { sensorApi } from "../api/sensor";
 
 const DEFAULT_CONFIG = [
   {
@@ -39,8 +40,6 @@ const DEFAULT_CONFIG = [
   },
 ];
 
-const STORAGE_KEY = "app_settings";
-
 export default defineComponent({
   name: "SettingsPage",
   setup() {
@@ -50,33 +49,34 @@ export default defineComponent({
     const data = ref<any[]>(JSON.parse(JSON.stringify(DEFAULT_CONFIG)));
 
     // 初始化时读取配置
-    onMounted(() => {
+    onMounted(async () => {
       try {
-        const stored = localStorage.getItem(STORAGE_KEY);
-        if (stored) {
-          const parsed = JSON.parse(stored);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            data.value = parsed;
-            return; // 成功加载缓存，直接返回
-          }
+        loading.value = true;
+        const res = await sensorApi.getConfigs();
+        if (res.data.success && res.data.data && res.data.data.length > 0) {
+          data.value = res.data.data;
+        } else {
+          // 如果后端没有数据（第一次启动），使用默认值
+          data.value = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
         }
       } catch (e) {
-        console.error("Failed to parse settings:", e);
+        console.error("Failed to fetch settings:", e);
+        message.error("获取配置失败");
+        // 保持默认值
+      } finally {
+        loading.value = false;
       }
-      // 如果没有缓存或缓存无效，使用默认值
-      // 注意：上面初始化已经给了默认值，所以这里其实可以省略，
-      // 但为了确保逻辑严密，如果缓存读取失败，强制覆盖回默认值也是安全的
-      data.value = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
     });
 
     const handleSave = async () => {
       loading.value = true;
-      // 模拟异步保存
-      await new Promise((resolve) => setTimeout(resolve, 500));
-
       try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(data.value));
-        message.success("配置已保存");
+        const res = await sensorApi.saveConfigs(data.value);
+        if (res.data.success) {
+          message.success("配置已保存");
+        } else {
+          message.error(res.data.message || "保存失败");
+        }
       } catch (e) {
         message.error("保存失败");
         console.error(e);
@@ -85,10 +85,25 @@ export default defineComponent({
       }
     };
 
-    const handleReset = () => {
-      data.value = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
-      localStorage.removeItem(STORAGE_KEY);
-      message.success("配置已重置为默认值");
+    const handleReset = async () => {
+      loading.value = true;
+      try {
+        const defaultConfig = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
+        data.value = defaultConfig;
+
+        // 重置时直接保存默认值到服务器
+        const res = await sensorApi.saveConfigs(defaultConfig);
+        if (res.data.success) {
+          message.success("配置已重置为默认值");
+        } else {
+          message.error("重置失败: " + res.data.message);
+        }
+      } catch (e) {
+        message.error("重置失败");
+        console.error(e);
+      } finally {
+        loading.value = false;
+      }
     };
 
     return () => (
@@ -100,7 +115,9 @@ export default defineComponent({
                 <NSpace>
                   <NPopconfirm onPositiveClick={handleReset}>
                     {{
-                      trigger: () => <NButton>重置默认</NButton>,
+                      trigger: () => (
+                        <NButton disabled={loading.value}>重置默认</NButton>
+                      ),
                       default: () =>
                         "确认要重置所有配置为默认值吗？此操作不可恢复。",
                     }}
