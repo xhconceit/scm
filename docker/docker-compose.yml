@@ -22,30 +22,7 @@ services:
       timeout: 5s
       retries: 5
 
-  # MQTT Broker (EMQX)
-  mqtt:
-    image: emqx/emqx:5.3.0
-    container_name: scm-mqtt
-    restart: unless-stopped
-    environment:
-      - EMQX_NAME=scm-mqtt
-      - EMQX_HOST=0.0.0.0
-    ports:
-      - "1883:1883"      # MQTT
-      - "8083:8083"      # MQTT over WebSocket
-      - "18083:18083"    # Dashboard
-    volumes:
-      - emqx_data:/opt/emqx/data
-      - emqx_log:/opt/emqx/log
-    networks:
-      - scm-network
-    healthcheck:
-      test: ["CMD", "emqx", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  # Server 服务
+  # Server 服务（内置 MQTT Broker）
   server:
     build:
       context: ..
@@ -55,12 +32,10 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      mqtt:
-        condition: service_healthy
     environment:
-      # MQTT 配置
-      MQTT_BROKER: mqtt://mqtt
+      # MQTT 配置（Server 内置 Broker）
       MQTT_PORT: 1883
+      MQTT_WS_PORT: 8883
       MQTT_USERNAME: ""
       MQTT_PASSWORD: ""
       
@@ -70,13 +45,16 @@ services:
       # 服务端口
       PORT: 3000
       NODE_ENV: production
+      
+      # Prisma 配置
+      PRISMA_CLI_BINARY_TARGETS: native
     ports:
-      - "3000:3000"
+      - "3000:3000"      # HTTP API
+      - "1883:1883"      # MQTT TCP
+      - "8883:8883"      # MQTT WebSocket
     networks:
       - scm-network
-    volumes:
-      - ./apps/server/prisma:/app/apps/server/prisma
-    command: sh -c "pnpm prisma migrate deploy && node dist/index.js"
+    command: ["node", "dist/index.js"]
 
   # Admin 前端服务
   admin:
@@ -100,9 +78,5 @@ networks:
 
 volumes:
   postgres_data:
-    driver: local
-  emqx_data:
-    driver: local
-  emqx_log:
     driver: local
 

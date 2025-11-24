@@ -19,7 +19,8 @@ if (process.env.NODE_ENV === 'development') {
 // 连接数据库
 prisma.$connect().catch((error) => {
   logger.error('Failed to connect to database', error);
-  process.exit(1);
+  // 不要立即退出，让应用继续运行并在后续尝试重连
+  logger.warn('Will continue running and retry connection on next request');
 });
 
 export default prisma;

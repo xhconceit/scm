@@ -1,0 +1,162 @@
+name: Docker Build and Deploy
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  # 运行测试
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [18.x]
+    
+    steps:
+      - name: 📥 Checkout 代码
+        uses: actions/checkout@v3
+
+      - name: 🏗️ 安装 pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: 🔧 设置 Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'pnpm'
+
+      - name: 📦 安装依赖
+        run: pnpm install --frozen-lockfile
+
+      - name: 🔍 Lint 检查
+        run: |
+          cd apps/server && pnpm lint
+          cd ../admin && pnpm lint
+
+      - name: 🧪 运行测试
+        run: |
+          cd apps/server && pnpm test
+          cd ../admin && pnpm test
+
+      - name: 📊 上传测试覆盖率
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./apps/server/coverage/lcov.info,./apps/admin/coverage/lcov.info
+
+  # 构建 Docker 镜像
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    
+    permissions:
+      contents: read
+      packages: write
+
+    strategy:
+      matrix:
+        service: [server, admin]
+
+    steps:
+      - name: 📥 Checkout 代码
+        uses: actions/checkout@v3
+
+      - name: 🔧 设置 Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: 🔑 登录到 GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 📝 提取元数据
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/${{ matrix.service }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha
+
+      - name: 🏗️ 构建并推送 Docker 镜像
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          file: ./docker/${{ matrix.service }}/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # 部署到服务器（可选）
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+      - name: 📥 Checkout 代码
+        uses: actions/checkout@v3
+
+      - name: 🚀 部署到生产服务器
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          script: |
+            cd /path/to/scm
+            git pull origin main
+            docker-compose -f docker/docker-compose.yml pull
+            docker-compose -f docker/docker-compose.yml up -d
+            docker system prune -f
+
+      - name: ✅ 健康检查
+        run: |
+          sleep 10
+          curl -f http://${{ secrets.DEPLOY_HOST }}:3000/health || exit 1
+          curl -f http://${{ secrets.DEPLOY_HOST }}:8080/health || exit 1
+
+      - name: 📧 发送通知
+        if: always()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          text: '部署到生产环境 ${{ job.status }}'
+          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+
+  # 安全扫描
+  security:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Checkout 代码
+        uses: actions/checkout@v3
+
+      - name: 🔒 运行 Trivy 漏洞扫描
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+
+      - name: 📤 上传扫描结果
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: 'trivy-results.sarif'
+

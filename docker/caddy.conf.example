@@ -1,0 +1,126 @@
+# ========================================
+# Caddy 反向代理配置示例（生产环境）
+# ========================================
+# Caddy 是一个现代化的 Web 服务器，自动处理 HTTPS
+# 位置：/etc/caddy/Caddyfile
+#
+# 优点：
+# - 自动 HTTPS（Let's Encrypt）
+# - 配置简单
+# - HTTP/2 和 HTTP/3 支持
+#
+# 安装 Caddy：
+# Ubuntu/Debian:
+#   sudo apt install -y debian-keyring debian-archive-keyring apt-transport-https
+#   curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | sudo gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg
+#   curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' | sudo tee /etc/apt/sources.list.d/caddy-stable.list
+#   sudo apt update && sudo apt install caddy
+
+# 主站点配置
+scm.example.com {
+    # Caddy 自动处理 HTTPS！
+
+    # 安全头部
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        X-Frame-Options "SAMEORIGIN"
+        X-Content-Type-Options "nosniff"
+        X-XSS-Protection "1; mode=block"
+        Referrer-Policy "strict-origin-when-cross-origin"
+    }
+
+    # Gzip 压缩
+    encode gzip zstd
+
+    # 日志
+    log {
+        output file /var/log/caddy/scm-access.log
+        format json
+    }
+
+    # API 代理
+    handle /api/* {
+        reverse_proxy localhost:3000 {
+            # 健康检查
+            health_uri /health
+            health_interval 10s
+            health_timeout 5s
+            
+            # 头部传递
+            header_up X-Real-IP {remote_host}
+            header_up X-Forwarded-For {remote_host}
+            header_up X-Forwarded-Proto {scheme}
+        }
+    }
+
+    # 健康检查
+    handle /health {
+        reverse_proxy localhost:3000
+    }
+
+    # 前端静态文件
+    handle {
+        reverse_proxy localhost:8080
+    }
+}
+
+# MQTT WebSocket 代理
+wss.scm.example.com {
+    reverse_proxy localhost:8083 {
+        # WebSocket 支持
+        transport http {
+            # 长连接超时
+            read_timeout 1h
+            write_timeout 1h
+        }
+    }
+}
+
+# ========================================
+# 简化配置（所有服务在同一域名）
+# ========================================
+
+# scm.example.com {
+#     # API
+#     reverse_proxy /api/* localhost:3000
+#     
+#     # WebSocket
+#     reverse_proxy /mqtt/* localhost:8083
+#     
+#     # 前端
+#     reverse_proxy localhost:8080
+# }
+
+# ========================================
+# 使用说明
+# ========================================
+#
+# 1. 修改域名
+#    将 scm.example.com 替换为你的域名
+#
+# 2. 启动 Caddy
+#    sudo systemctl start caddy
+#    sudo systemctl enable caddy
+#
+# 3. 验证配置
+#    sudo caddy validate --config /etc/caddy/Caddyfile
+#
+# 4. 重载配置
+#    sudo systemctl reload caddy
+#
+# 5. 查看日志
+#    sudo journalctl -u caddy -f
+#
+# 6. 防火墙
+#    sudo ufw allow 80/tcp
+#    sudo ufw allow 443/tcp
+#
+# 7. 更多功能
+#    - 自动 HTTPS（Let's Encrypt）
+#    - HTTP/3 支持（默认启用）
+#    - 自动证书续期
+#    - 负载均衡
+#    - 限流保护
+#
+# ========================================
+
