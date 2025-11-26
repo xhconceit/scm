@@ -43,8 +43,8 @@ importers:
         specifier: ^4.4.0
         version: 4.6.2(vite@5.4.21(@types/node@20.19.25))(vue@3.5.24(typescript@5.9.3))
       '@vitejs/plugin-vue-jsx':
-        specifier: ^5.1.1
-        version: 5.1.1(vite@5.4.21(@types/node@20.19.25))(vue@3.5.24(typescript@5.9.3))
+        specifier: ^3.1.0
+        version: 3.1.0(vite@5.4.21(@types/node@20.19.25))(vue@3.5.24(typescript@5.9.3))
       '@vitest/ui':
         specifier: ^1.0.0
         version: 1.6.1(vitest@1.6.1)
@@ -724,9 +724,6 @@ packages:
   '@prisma/get-platform@5.22.0':
     resolution: {integrity: sha512-pHhpQdr1UPFpt+zFfnPazhulaZYCUqeIcPpJViYoq9R+D/yw4fjE+CtnsnKzPYm0ddUbeXUzjGVGIRVgPDCk4Q==}
 
-  '@rolldown/pluginutils@1.0.0-beta.50':
-    resolution: {integrity: sha512-5e76wQiQVeL1ICOZVUg4LSOVYg9jyhGCin+icYozhsUzM+fHE7kddi1bdiE0jwVqTfkjba3jUFbEkoC9WkdvyA==}
-
   '@rollup/rollup-android-arm-eabi@4.53.2':
     resolution: {integrity: sha512-yDPzwsgiFO26RJA4nZo8I+xqzh7sJTZIWQOxn+/XOdPE31lAvLIYCKqjV+lNH/vxE2L2iH3plKxDCRK6i+CwhA==}
     cpu: [arm]
@@ -1016,11 +1013,11 @@ packages:
   '@vicons/ionicons5@0.13.0':
     resolution: {integrity: sha512-zvZKBPjEXKN7AXNo2Na2uy+nvuv6SP4KAMQxpKL2vfHMj0fSvuw7JZcOPCjQC3e7ayssKnaoFVAhbYcW6v41qQ==}
 
-  '@vitejs/plugin-vue-jsx@5.1.1':
-    resolution: {integrity: sha512-uQkfxzlF8SGHJJVH966lFTdjM/lGcwJGzwAHpVqAPDD/QcsqoUGa+q31ox1BrUfi+FLP2ChVp7uLXE3DkHyDdQ==}
-    engines: {node: ^20.19.0 || >=22.12.0}
+  '@vitejs/plugin-vue-jsx@3.1.0':
+    resolution: {integrity: sha512-w9M6F3LSEU5kszVb9An2/MmXNxocAnUb3WhRr8bHlimhDrXNt6n6D2nJQR3UXpGlZHh/EsgouOHCsM8V3Ln+WA==}
+    engines: {node: ^14.18.0 || >=16.0.0}
     peerDependencies:
-      vite: ^5.0.0 || ^6.0.0 || ^7.0.0
+      vite: ^4.0.0 || ^5.0.0
       vue: ^3.0.0
 
   '@vitejs/plugin-vue@4.6.2':
@@ -4087,8 +4084,6 @@ snapshots:
     dependencies:
       '@prisma/debug': 5.22.0
 
-  '@rolldown/pluginutils@1.0.0-beta.50': {}
-
   '@rollup/rollup-android-arm-eabi@4.53.2':
     optional: true
 
@@ -4361,12 +4356,10 @@ snapshots:
 
   '@vicons/ionicons5@0.13.0': {}
 
-  '@vitejs/plugin-vue-jsx@5.1.1(vite@5.4.21(@types/node@20.19.25))(vue@3.5.24(typescript@5.9.3))':
+  '@vitejs/plugin-vue-jsx@3.1.0(vite@5.4.21(@types/node@20.19.25))(vue@3.5.24(typescript@5.9.3))':
     dependencies:
       '@babel/core': 7.28.5
-      '@babel/plugin-syntax-typescript': 7.27.1(@babel/core@7.28.5)
       '@babel/plugin-transform-typescript': 7.28.5(@babel/core@7.28.5)
-      '@rolldown/pluginutils': 1.0.0-beta.50
       '@vue/babel-plugin-jsx': 1.5.0(@babel/core@7.28.5)
       vite: 5.4.21(@types/node@20.19.25)
       vue: 3.5.24(typescript@5.9.3)
